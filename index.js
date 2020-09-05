@@ -38,6 +38,7 @@ io.sockets.on("connection", (socket) => {
         client["email"] = email;
         client["admin"] = isAdmin;
         client.channel.emit("registrationcomplete");
+        updateClientList();
       }
     }
   });
@@ -48,6 +49,7 @@ io.sockets.on("connection", (socket) => {
       log(`Client: ${client.email}, UID: ${client.uid} disconnected`);
       removeClient(client.uid);
       client = null;
+      updateClientList();
     }
   });
 
@@ -55,9 +57,19 @@ io.sockets.on("connection", (socket) => {
     const { title, alert } = data;
     socket.broadcast.emit("broadcast", { alert: alert, title: title });
   });
-
-  
 });
+
+function updateClientList() {
+  clients.map((client) => {
+    const channel = client.channel;
+    const channels = [];
+    clients.forEach((client) => {
+      channels.push({ email: client.email, uid: client.uid });
+    });
+    const strChannels = JSON.stringify(channels);
+    channel.emit("updatedclientlist", { list: strChannels });
+  });
+}
 
 function initConnection(socket) {
   if (null === findClientById(socket.id)) {

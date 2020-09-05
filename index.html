@@ -98,16 +98,9 @@
     </div>
 
     <div id="chat-interface" class="container-fluid">
-      <ul id="chat-user-list">
-        <p class="lead">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus, ex
-          exercitationem assumenda maiores error illum asperiores sapiente
-          possimus minima praesentium, aliquid saepe magni pariatur corporis id
-          ipsam quis, aperiam dicta?
-        </p>
-      </ul>
+      <ul id="chat-user-list" class="list-group mx-0 my-0"></ul>
 
-      <div id="chat-conversations">
+      <div id="chat-conversations" class="mx-0 my-0">
         <p class="lead">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quia
           voluptate aperiam error distinctio consectetur quibusdam, explicabo
@@ -165,6 +158,7 @@
       const email = $("#email");
       const admin = $("#admin");
       const ci = $("#chat-interface");
+      const cul = $("#chat-user-list");
       const cf = $("#chat-form");
       const msg = $("#message");
       const broadcastTitle = $(".broadcast-title");
@@ -203,7 +197,16 @@
       });
 
       socket.on("updatedclientlist", (data) => {
-        const { clients } = data;
+        const { list } = data;
+        cul.empty();
+        const clients = JSON.parse(list);
+        clients.map((client) => {
+          if (client) {
+            const li = `<li class="list-group-item" data-uid=${client.uid}><strong>${client.email}</strong></li>`;
+            console.log(li);
+            cul.append(li);
+          }
+        });
       });
 
       socket.on("registrationcomplete", () => {
