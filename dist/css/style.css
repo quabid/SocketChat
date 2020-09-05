@@ -1,0 +1,15 @@
+* {
+  box-sizing: border-box;
+  font-family: cursive, fantasy, Georgia, 'Times New Roman', Times, serif, Verdana, Geneva, Tahoma, sans-serif;
+}
+
+main {
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+header {
+  font-size: 1.1rem;
+  font-weight: bold;
+}

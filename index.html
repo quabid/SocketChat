@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="An Express web app using Socket.io" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+
+    <script
+      src="https://kit.fontawesome.com/e13fb8b113.js"
+      crossorigin="anonymous"
+    ></script>
+    <title>Socket Chat App</title>
+  </head>
+
+  <body class="container-fluid" style="grid-auto-rows: auto">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div class="broadcast">
+      <div
+        class="modal fade"
+        id="staticBackdrop"
+        data-backdrop="static"
+        data-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5
+                class="modal-title broadcast-title"
+                id="staticBackdropLabel"
+              ></h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body broadcast-body"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="button" class="btn btn-primary">Understood</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="registration-form" class="container">
+      <h2 class="h2 text-center text-primary">App Registration</h2>
+      <form>
+        <div style="justify-items: center; justify-content: center">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-envelope fw fa-2x"></i>
+            </span>
+
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter Email"
+              class="form-control form-control-lg"
+            />
+
+            <input
+              type="hidden"
+              id="uid"
+              class="form-control form-control-lg"
+            />
+
+            <input
+              type="hidden"
+              id="admin"
+              value="false"
+              class="form-control form-control-lg"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div id="chat-interface" class="container-fluid">
+      <ul id="chat-user-list">
+        <p class="lead">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus, ex
+          exercitationem assumenda maiores error illum asperiores sapiente
+          possimus minima praesentium, aliquid saepe magni pariatur corporis id
+          ipsam quis, aperiam dicta?
+        </p>
+      </ul>
+
+      <div id="chat-conversations">
+        <p class="lead">
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quia
+          voluptate aperiam error distinctio consectetur quibusdam, explicabo
+          dolores in eligendi nemo fuga odio nobis odit quidem asperiores cum
+          doloremque nam saepe!
+        </p>
+      </div>
+    </div>
+
+    <form id="chat-form" class="border border-primary rounded my-0 d-flex">
+      <div class="input-group mx-1 my-1">
+        <input
+          type="text"
+          id="message"
+          autocomplete="off"
+          class="form-control form-control-lg"
+          placeholder="Enter Message Here"
+          aria-placeholder="Enter Message Here"
+          style="width: 60%"
+        />
+      </div>
+
+      <input
+        type="submit"
+        value="Send"
+        class="d-block btn btn-primary my-1 mx-1"
+        style="width: 15%"
+      />
+    </form>
+
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const socket = io();
+      const rf = $("#registration-form");
+      const clientId = $("#uid");
+      const email = $("#email");
+      const admin = $("#admin");
+      const ci = $("#chat-interface");
+      const cf = $("#chat-form");
+      const msg = $("#message");
+      const broadcastTitle = $(".broadcast-title");
+      const broadcastBody = $(".broadcast-body");
+      const staticBackdrop = $("#staticBackdrop");
+
+      /* $.when($.ready).then(function () {
+        // Document is ready.
+        socket.emit("checkregistration");
+      }); */
+
+      cf.submit((e) => {
+        e.preventDefault();
+        // socket.emit("broadcast", { alert: msg.val() });
+        // msg.val("");
+      });
+
+      socket.on("broadcast", (data) => {
+        const { title, alert } = data;
+        broadcastTitle.text(title);
+        broadcastBody.text(alert);
+        staticBackdrop.modal("show");
+      });
+
+      socket.on("registrationrequest", (data) => {
+        clientId.val(data.uid);
+        rf.addClass("show");
+        rf.submit((e) => {
+          e.preventDefault();
+          socket.emit("registerme", {
+            email: email.val(),
+            uid: clientId.val(),
+            isAdmin: admin.val(),
+          });
+        });
+      });
+
+      socket.on("updatedclientlist", (data) => {
+        const { clients } = data;
+      });
+
+      socket.on("registrationcomplete", () => {
+        rf.removeClass("show");
+        ci.addClass("show");
+        cf.addClass("show");
+      });
+    </script>
+  </body>
+  <link rel="stylesheet" href="/css/style.css" />
+</html>
