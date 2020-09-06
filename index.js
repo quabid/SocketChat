@@ -58,10 +58,19 @@ io.sockets.on("connection", (socket) => {
     socket.broadcast.emit("broadcast", { alert: alert, title: title });
   });
 
-  socket.on('message', data => {
-    const { fromClientUid, toClientUid, toClientEmail, fromClientMessage} = data;
-    log(`From ${fromClientUid} to ${toClientEmail} ${toClientUid} Sending Message: ${fromClientMessage}`);
-    
+  socket.on('messagediscreet', data => {
+    const { fromClientUid, toClientUid, fromClientMessage} = data;
+    const from = findClientById(fromClientUid);
+    const to = findClientById(toClientUid);
+
+    log(`From ${from.email} to ${to.email} ${to.uid} Sending Message: ${fromClientMessage}`);
+
+    const message = {
+      from: from.email,
+      message: fromClientMessage
+    }
+
+    to.channel.emit('privatemessage',message);
   });
 });
 
