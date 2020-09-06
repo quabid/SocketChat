@@ -86,7 +86,7 @@ io.sockets.on("connection", (socket) => {
     let client = findClientById(from);
 
     if (null != client && message.length > 0) {
-      log(`From ${client.email} with message {$message}`)
+      log(`From ${client.email} with message ${message}`)
       clients.forEach(c => {
         c.channel.emit("messagebroadcast", { from: client.email, message: message });
       });
