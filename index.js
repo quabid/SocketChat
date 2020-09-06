@@ -80,6 +80,20 @@ io.sockets.on("connection", (socket) => {
       message = null;
     }
   });
+
+  socket.on("message", (data) => {
+    let { from, message } = data;
+    let client = findClientById(from);
+
+    if (null != client && message.length > 0) {
+      log(`From ${client.email} with message {$message}`)
+      clients.forEach(c => {
+        c.channel.emit("messagebroadcast", { from: client.email, message: message });
+      });
+      client = null;
+      data = null;
+    }
+  });
 });
 
 function updateClientList() {
