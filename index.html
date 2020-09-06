@@ -159,7 +159,7 @@
         <li class="list-group-item">testingfour@four.net</li>
       </ul>
 
-      <div id="chat-conversations" class="border border-primary rounded mx-3 my-1 col-sm col-">
+      <div id="chat-conversations" class="border border-primary rounded mx-md-3 mx-sm-1 my-1 col-sm col-">
         <p class="lead">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quia
           voluptate aperiam error distinctio consectetur quibusdam, explicabo
@@ -238,11 +238,11 @@
       }); */
 
       function handleItemClick(e) {
-        const client = e.getAttribute("data-uid");
-        const clientEmail = e.getAttribute("data-email");
-        const me = clientId.val();
-        const msg = privateMessageTextarea.val();
-        privateMessageLabel.text(`Send To ${clientEmail}`);
+        const toClientUid = e.getAttribute("data-uid");
+        const toClientEmail = e.getAttribute("data-email");
+        const fromClientUid = clientId.val();
+        const fromClientMessage = privateMessageTextarea.val();
+        privateMessageLabel.text(`Send To ${toClientEmail}`);
         privateMessageForm.submit((e) => {
           e.preventDefault();
         });
