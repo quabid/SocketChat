@@ -64,6 +64,60 @@
       </div>
     </div>
 
+    <div
+      class="modal fade private-message-modal"
+      id="privateMessenger"
+      data-backdrop="static"
+      data-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="privateMessageLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="privateMessageLabel"></h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <form id="privateMessageForm">
+              <div class="form-group">
+                <textarea
+                  class="form-control"
+                  id="privateMessageTextarea"
+                  rows="3"
+                ></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              id="privateMessageSend"
+              type="button"
+              class="btn btn-primary"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="registration-form" class="container">
       <h2 class="h2 text-center text-primary">App Registration</h2>
       <form>
@@ -97,7 +151,7 @@
       </form>
     </div>
 
-    <div id="chat-interface" class="row fixed-top">
+    <div id="chat-interface" class="row fixed-top ml-2">
       <ul id="chat-user-list" class="list-group mx-1 my-1 col-">
         <li class="list-group-item">testingone@one.net</li>
         <li class="list-group-item">testingtwo@two.net</li>
@@ -115,7 +169,10 @@
       </div>
     </div>
 
-    <form id="chat-form" class="border border-primary rounded my-0 d-flex fixed-bottom">
+    <form
+      id="chat-form"
+      class="border border-primary rounded my-0 d-flex fixed-bottom"
+    >
       <div class="input-group mx-1 my-1">
         <input
           type="text"
@@ -169,13 +226,28 @@
       const broadcastTitle = $(".broadcast-title");
       const broadcastBody = $(".broadcast-body");
       const staticBackdrop = $("#staticBackdrop");
-
-      
+      const privateMessenger = $("#privateMessenger");
+      const privateMessageLabel = $("#privateMessageLabel");
+      const privateMessageSend = $("#privateMessageSend");
+      const privateMessageForm = $("#privateMessageForm");
+      const privateMessageTextarea = $("#privateMessageTextarea");
 
       /* $.when($.ready).then(function () {
         // Document is ready.
         socket.emit("checkregistration");
       }); */
+
+      function handleItemClick(e) {
+        const client = e.getAttribute("data-uid");
+        const clientEmail = e.getAttribute("data-email");
+        const me = clientId.val();
+        const msg = privateMessageTextarea.val();
+        privateMessageLabel.text(`To ${clientEmail}`);
+        privateMessageForm.submit((e) => {
+          e.preventDefault();
+        });
+        privateMessenger.modal("show");
+      }
 
       cf.submit((e) => {
         e.preventDefault();
@@ -208,8 +280,8 @@
         cul.empty();
         const clients = JSON.parse(list);
         clients.map((client) => {
-          if (client) {
-            const li = `<li class="list-group-item" data-uid=${client.uid}><strong>${client.email}</strong></li>`;
+          if (client && client.uid != clientId.val()) {
+            const li = `<li onclick="handleItemClick(this)" class="list-group-item" data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
             console.log(li);
             cul.append(li);
           }
