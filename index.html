@@ -152,18 +152,12 @@
     </div>
 
     <div id="chat-interface" class="row fixed-top ml-2">
-      <ul id="chat-user-list" class="list-group mx-1 my-1 col-">
-        <li class="list-group-item">testingone@one.net</li>
-        <li class="list-group-item">testingtwo@two.net</li>
-        <li class="list-group-item">testingtrhee@three.net</li>
-        <li class="list-group-item">testingfour@four.net</li>
-      </ul>
+      <ul id="chat-user-list" class="list-group mx-1 my-1 col-"></ul>
 
       <div
         id="chat-conversations"
         class="container border border-primary rounded mx-md-3 mx-sm-1 my-1 col-sm col-"
-      >
-      </div>
+      ></div>
     </div>
 
     <form
@@ -236,14 +230,13 @@
       }); */
 
       function handleItemClick(e) {
-        const fromClientUid = clientId.val();
-        const fromClientMessage = privateMessageTextarea.val();
         privateMessageLabel.text(`Send To ${e.getAttribute("data-email")}`);
         privateMessageSend.click(() => {
           socket.emit("messagediscreet", {
-            toClientUid: e.getAttribute("data-uid"),
-            fromClientMessage: privateMessageTextarea.val(),
-            fromClientUid: clientId.val(),
+            toUid: e.getAttribute("data-uid"),
+            toEmail: e.getAttribute("data-email"),
+            fromMessage: privateMessageTextarea.val(),
+            fromUid: clientId.val(),
           });
           privateMessageTextarea.val("");
           privateMessenger.modal("hide");
@@ -258,11 +251,15 @@
       });
 
       socket.on("privatemessage", (data) => {
-        const { from, message } = data;
+        let { from, message } = data;
         console.log(`From ${from} with message ${message}`);
-        const div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw fa-2x"> <span class="text-lg">${from}</span> </i></span><p class="lead">${message}</p></div></div>`;
+        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw"> <span class="text-sm">${from} Says: </span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
 
-        cc.append(div);
+        if (data.from && data.message && div.length > 0) {
+          cc.append(div);
+          data = null;
+          div = null;
+        }
       });
 
       socket.on("broadcast", (data) => {

@@ -58,19 +58,27 @@ io.sockets.on("connection", (socket) => {
     socket.broadcast.emit("broadcast", { alert: alert, title: title });
   });
 
-  socket.on('messagediscreet', data => {
-    const { fromClientUid, toClientUid, fromClientMessage} = data;
-    const from = findClientById(fromClientUid);
-    const to = findClientById(toClientUid);
+  socket.on("messagediscreet", (data) => {
+    let { fromUid, toUid, toEmail, fromMessage } = data;
+    let from = findClientById(fromUid);
+    let to = findClientByEmail(toEmail);
 
-    log(`From ${from.email} to ${to.email} ${to.uid} Sending Message: ${fromClientMessage}`);
+    log(
+      `From ${from.email} with ID: ${from.uid} to ${to.email} with ID ${to.uid} Sending Message: ${fromMessage}`
+    );
 
-    const message = {
+    let message = {
       from: from.email,
-      message: fromClientMessage
-    }
+      message: fromMessage,
+    };
 
-    to.channel.emit('privatemessage',message);
+    if (from && to && message) {
+      to.channel.emit("privatemessage", message);
+      from = null;
+      to = null;
+      data = null;
+      message = null;
+    }
   });
 });
 
@@ -95,6 +103,14 @@ function initConnection(socket) {
 
 function findClientById(id) {
   const index = clients.findIndex((x) => x.uid == id);
+  if (-1 !== index) {
+    return clients[index];
+  }
+  return null;
+}
+
+function findClientByEmail(email) {
+  const index = clients.findIndex((x) => x.email == email);
   if (-1 !== index) {
     return clients[index];
   }
