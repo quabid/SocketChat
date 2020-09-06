@@ -97,10 +97,15 @@
       </form>
     </div>
 
-    <div id="chat-interface" class="container-fluid">
-      <ul id="chat-user-list" class="list-group mx-0 my-0"></ul>
+    <div id="chat-interface" class="row fixed-top">
+      <ul id="chat-user-list" class="list-group mx-1 my-1 col-">
+        <li class="list-group-item">testingone@one.net</li>
+        <li class="list-group-item">testingtwo@two.net</li>
+        <li class="list-group-item">testingtrhee@three.net</li>
+        <li class="list-group-item">testingfour@four.net</li>
+      </ul>
 
-      <div id="chat-conversations" class="mx-0 my-0">
+      <div id="chat-conversations" class="mx-1 my-1 col-sm col-">
         <p class="lead">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quia
           voluptate aperiam error distinctio consectetur quibusdam, explicabo
@@ -110,7 +115,7 @@
       </div>
     </div>
 
-    <form id="chat-form" class="border border-primary rounded my-0 d-flex">
+    <form id="chat-form" class="border border-primary rounded my-0 d-flex fixed-bottom">
       <div class="input-group mx-1 my-1">
         <input
           type="text"
@@ -126,7 +131,7 @@
       <input
         type="submit"
         value="Send"
-        class="d-block btn btn-primary my-1 mx-1"
+        class="d-none d-md-block btn btn-primary my-1 mx-1"
         style="width: 15%"
       />
     </form>
@@ -164,6 +169,8 @@
       const broadcastTitle = $(".broadcast-title");
       const broadcastBody = $(".broadcast-body");
       const staticBackdrop = $("#staticBackdrop");
+
+      
 
       /* $.when($.ready).then(function () {
         // Document is ready.
