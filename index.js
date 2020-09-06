@@ -45,7 +45,7 @@ io.sockets.on("connection", (socket) => {
 
   socket.on("disconnect", (reason) => {
     let client = findClientById(socket.id);
-    if (null !== client) {
+    if (null !== client && client.email) {
       log(`Client: ${client.email}, UID: ${client.uid} disconnected`);
       removeClient(client.uid);
       client = null;

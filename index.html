@@ -159,7 +159,7 @@
         <li class="list-group-item">testingfour@four.net</li>
       </ul>
 
-      <div id="chat-conversations" class="mx-1 my-1 col-sm col-">
+      <div id="chat-conversations" class="border border-primary rounded mx-3 my-1 col-sm col-">
         <p class="lead">
           Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quia
           voluptate aperiam error distinctio consectetur quibusdam, explicabo
@@ -242,7 +242,7 @@
         const clientEmail = e.getAttribute("data-email");
         const me = clientId.val();
         const msg = privateMessageTextarea.val();
-        privateMessageLabel.text(`To ${clientEmail}`);
+        privateMessageLabel.text(`Send To ${clientEmail}`);
         privateMessageForm.submit((e) => {
           e.preventDefault();
         });
@@ -280,7 +280,7 @@
         cul.empty();
         const clients = JSON.parse(list);
         clients.map((client) => {
-          if (client && client.uid != clientId.val()) {
+          if (client.email && client.uid != clientId.val()) {
             const li = `<li onclick="handleItemClick(this)" class="list-group-item" data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
             console.log(li);
             cul.append(li);
