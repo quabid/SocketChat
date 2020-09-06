@@ -60,7 +60,8 @@ io.sockets.on("connection", (socket) => {
 
   socket.on('message', data => {
     const { fromClientUid, toClientUid, toClientEmail, fromClientMessage} = data;
-    log(`From ${fromClientUid} to ${toClientEmail} ${toClientUid} Sending Message: ${fromClientMessage}`)
+    log(`From ${fromClientUid} to ${toClientEmail} ${toClientUid} Sending Message: ${fromClientMessage}`);
+    
   });
 });
 
