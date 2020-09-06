@@ -57,6 +57,11 @@ io.sockets.on("connection", (socket) => {
     const { title, alert } = data;
     socket.broadcast.emit("broadcast", { alert: alert, title: title });
   });
+
+  socket.on('message', data => {
+    const { fromClientUid, toClientUid, toClientEmail, fromClientMessage} = data;
+    log(`From ${fromClientUid} to ${toClientEmail} ${toClientUid} Sending Message: ${fromClientMessage}`)
+  });
 });
 
 function updateClientList() {
