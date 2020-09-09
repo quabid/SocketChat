@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="An Express web app using Socket.io" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+
+    <script
+      src="https://kit.fontawesome.com/e13fb8b113.js"
+      crossorigin="anonymous"
+    ></script>
+    <title>Socket Chat App</title>
+  </head>
+
+  <body class="container-fluid" style="grid-auto-rows: auto">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div class="broadcast">
+      <div
+        class="modal fade"
+        id="staticBackdrop"
+        data-backdrop="static"
+        data-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5
+                class="modal-title broadcast-title"
+                id="staticBackdropLabel"
+              ></h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body broadcast-body"></div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="button" class="btn btn-primary">Understood</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade private-message-modal"
+      id="privateMessenger"
+      data-backdrop="static"
+      data-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="privateMessageLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="privateMessageLabel"></h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <form id="privateMessageForm">
+              <div class="form-group">
+                <textarea
+                  class="form-control"
+                  id="privateMessageTextarea"
+                  rows="3"
+                ></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              id="privateMessageSend"
+              type="button"
+              class="btn btn-primary"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="registration-form" class="container">
+      <h2 class="h2 text-center text-primary">App Registration</h2>
+      <form>
+        <div style="justify-items: center; justify-content: center">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-envelope fw fa-2x"></i>
+            </span>
+
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter Email"
+              class="form-control form-control-lg"
+            />
+
+            <input
+              type="hidden"
+              id="uid"
+              class="form-control form-control-lg"
+            />
+
+            <input
+              type="hidden"
+              id="admin"
+              value="false"
+              class="form-control form-control-lg"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div id="chat-interface" class="row fixed-top ml-2">
+      <ul id="chat-user-list" class="list-group mx-1 my-1 col-"></ul>
+
+      <div
+        id="chat-conversations"
+        class="container border border-primary rounded mx-md-3 mx-sm-1 my-1 col-sm col-"
+      ></div>
+    </div>
+
+    <form
+      id="chat-form"
+      class="border border-primary rounded my-0 d-flex fixed-bottom"
+    >
+      <div class="input-group mx-1 my-1">
+        <input
+          type="text"
+          id="message"
+          autocomplete="off"
+          class="form-control form-control-lg"
+          placeholder="Enter Message Here"
+          aria-placeholder="Enter Message Here"
+          style="width: 60%"
+        />
+      </div>
+
+      <input
+        type="submit"
+        value="Send"
+        class="d-none d-md-block btn btn-primary my-1 mx-1"
+        style="width: 15%"
+      />
+    </form>
+
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      const socket = io();
+      const rf = $("#registration-form");
+      const clientId = $("#uid");
+      const email = $("#email");
+      const admin = $("#admin");
+      const ci = $("#chat-interface");
+      const cul = $("#chat-user-list");
+      const cf = $("#chat-form");
+      const cc = $("#chat-conversations");
+      const msg = $("#message");
+      const broadcastTitle = $(".broadcast-title");
+      const broadcastBody = $(".broadcast-body");
+      const staticBackdrop = $("#staticBackdrop");
+      const privateMessenger = $("#privateMessenger");
+      const privateMessageLabel = $("#privateMessageLabel");
+      const privateMessageSend = $("#privateMessageSend");
+      const privateMessageForm = $("#privateMessageForm");
+      const privateMessageTextarea = $("#privateMessageTextarea");
+
+      /* $.when($.ready).then(function () {
+        // Document is ready.
+        socket.emit("checkregistration");
+      }); */
+
+      function handleItemClick(e) {
+        privateMessageLabel.text(`Send To ${e.getAttribute("data-email")}`);
+        privateMessageSend.click(() => {
+          socket.emit("messagediscreet", {
+            toUid: e.getAttribute("data-uid"),
+            toEmail: e.getAttribute("data-email"),
+            fromMessage: privateMessageTextarea.val(),
+            fromUid: clientId.val(),
+          });
+          privateMessageTextarea.val("");
+          privateMessenger.modal("hide");
+        });
+        privateMessenger.modal("show");
+      }
+
+      cf.submit((e) => {
+        e.preventDefault();
+        // socket.emit("broadcast", { alert: msg.val() });
+        // msg.val("");
+        socket.emit("message", { from: clientId.val(), message: msg.val() });
+        msg.val("");
+      });
+
+      socket.on("messagebroadcast", (data) => {
+        let { from, message } = data;
+
+        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw">
+           <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
+
+        if (data.from && data.message && div.length > 0) {
+          cc.append(div);
+          data = null;
+          div = null;
+        }
+      });
+
+      socket.on("privatemessage", (data) => {
+        let { from, message } = data;
+        // console.log(`From ${from} with message ${message}`);
+        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw"> <span class="text-sm">${from} Says: </span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
+
+        if (data.from && data.message && div.length > 0) {
+          cc.append(div);
+          data = null;
+          div = null;
+        }
+      });
+
+      socket.on("broadcast", (data) => {
+        const { title, alert } = data;
+        broadcastTitle.text(title);
+        broadcastBody.text(alert);
+        staticBackdrop.modal("show");
+      });
+
+      socket.on("registrationrequest", (data) => {
+        clientId.val(data.uid);
+        rf.addClass("show");
+        rf.submit((e) => {
+          e.preventDefault();
+          socket.emit("registerme", {
+            email: email.val(),
+            uid: clientId.val(),
+            isAdmin: admin.val(),
+          });
+        });
+      });
+
+      socket.on("updatedclientlist", (data) => {
+        const { list } = data;
+        cul.empty();
+        const clients = JSON.parse(list);
+        clients.map((client) => {
+          if (client.email && client.uid != clientId.val()) {
+            const li = `<li onclick="handleItemClick(this)" class="list-group-item" data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
+            // console.log(li);
+            cul.append(li);
+          }
+        });
+      });
+
+      socket.on("registrationcomplete", () => {
+        rf.removeClass("show");
+        ci.addClass("show");
+        cf.addClass("show");
+      });
+    </script>
+  </body>
+  <link rel="stylesheet" href="/css/style.css" />
+</html>

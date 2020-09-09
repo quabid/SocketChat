@@ -4,6 +4,7 @@ const app = express();
 const path = require("path");
 const server = require("http").createServer(app);
 const io = require("socket.io").listen(server);
+const nanoid = require("nanoid");
 
 // Constants
 const { log } = require("./custom_modules/Logger");
@@ -15,13 +16,15 @@ let clients = [];
 
 // Configure Routers
 const home = require("./routes/landing");
+const admin = require("./routes/admin");
 
 app.use(express.static(path.join(__dirname, "public")));
 
-server.listen(process.env.port || 3000, serverStartMessage);
-
 // Set Routes
 app.use("/", home);
+app.use("/admin", admin);
+
+server.listen(process.env.port || 3000, serverStartMessage);
 
 // Config Socket.io
 io.sockets.on("connection", (socket) => {
@@ -86,9 +89,12 @@ io.sockets.on("connection", (socket) => {
     let client = findClientById(from);
 
     if (null != client && message.length > 0) {
-      log(`From ${client.email} with message ${message}`)
-      clients.forEach(c => {
-        c.channel.emit("messagebroadcast", { from: client.email, message: message });
+      log(`From ${client.email} with message ${message}`);
+      clients.forEach((c) => {
+        c.channel.emit("messagebroadcast", {
+          from: client.email,
+          message: message,
+        });
       });
       client = null;
       data = null;
