@@ -1,4 +1,4 @@
-const DB_URI = `${process.env.MONGODB_URI_ENCODED}`;
+const DB_URI = `${process.env.MONGODB_URI}`;
 const DB_COL = process.env.MONGO_COLLECTION;
 const DB_NAME = process.env.MONGO_DB_NAME;
 const DB_USER = process.env.MONGO_DB_USER_LTD;

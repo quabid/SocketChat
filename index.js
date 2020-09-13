@@ -25,7 +25,7 @@ mongoose
     dbName: DB_NAME,
   })
   .then(() => {
-    log(`DB connected`);
+    log(`${chalk.keyword("orange")('\tDB Connected')}`);
   })
   .catch((err) => log(err));
 
@@ -33,7 +33,7 @@ mongoose
 const PORT = 3000;
 const ADDRESS = process.env.ADDRESS || "0.0.0.0";
 const MESSAGE = chalk.keyword("orange")(`Server started on port ${PORT}\n`);
-const serverStartMessage = () => log(`\n\t${MESSAGE}\n`);
+const serverStartMessage = () => log(`\n\t${MESSAGE}`);
 let clients = [],
   admins = [{ email: "quobod@gmail.com", pwd: "dEeppurple%#" }];
 
