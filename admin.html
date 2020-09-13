@@ -118,10 +118,17 @@
       </div>
     </div>
 
-    <div id="registration-form" class="container">
-      <h2 class="h2 text-center text-primary">App Registration</h2>
-      <form>
-        <div style="justify-items: center; justify-content: center">
+    <div id="admin-login-form" class="container">
+      <h2 class="h2 text-center text-primary">Admin Login</h2>
+      <form id="login-form">
+        <div
+          style="
+            justify-items: center;
+            justify-content: center;
+            row-gap: 0.5rem;
+            display: grid;
+          "
+        >
           <div class="input-group">
             <span class="input-group-text">
               <i class="fas fa-envelope fw fa-2x"></i>
@@ -131,6 +138,19 @@
               type="email"
               id="email"
               placeholder="Enter Email"
+              class="form-control form-control-lg"
+            />
+          </div>
+
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-lock fw fa-2x"></i>
+            </span>
+
+            <input
+              type="password"
+              id="pwd"
+              placeholder="Enter Password"
               class="form-control form-control-lg"
             />
 
@@ -146,6 +166,10 @@
               value="false"
               class="form-control form-control-lg"
             />
+          </div>
+
+          <div class="input-group">
+            <input type="submit" value="Submit" class="btn btn-primary" />
           </div>
         </div>
       </form>
@@ -206,9 +230,11 @@
 
     <script>
       const socket = io();
-      const rf = $("#registration-form");
+      const alf = $("#admin-login-form");
+      const lf = $("#login-form");
       const clientId = $("#uid");
       const email = $("#email");
+      const pwd = $("#pwd");
       const admin = $("#admin");
       const ci = $("#chat-interface");
       const cul = $("#chat-user-list");
@@ -224,10 +250,11 @@
       const privateMessageForm = $("#privateMessageForm");
       const privateMessageTextarea = $("#privateMessageTextarea");
 
-      /* $.when($.ready).then(function () {
+      $.when($.ready).then(function () {
         // Document is ready.
-        socket.emit("checkregistration");
-      }); */
+        alf.addClass("show");
+        socket.emit("getmyid");
+      });
 
       function handleItemClick(e) {
         privateMessageLabel.text(`Send To ${e.getAttribute("data-email")}`);
@@ -252,49 +279,27 @@
         msg.val("");
       });
 
-      socket.on("messagebroadcast", (data) => {
-        let { from, message } = data;
+      socket.on("hereisyourid", (data) => {
+        if (data.uid) {
+          clientId.val(data.uid);
 
-        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw">
-           <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
+          if (typeof Storage !== undefined) {
+            if (!sessionStorage.adminLoggedIn) {
+              lf.submit((e) => {
+                e.preventDefault();
+                socket.emit("adminlogin", {
+                  email: email.val(),
+                  password: pwd.val(),
+                  uid: clientId.val(),
+                  isAdmin: admin.val(),
+                });
 
-        if (data.from && data.message && div.length > 0) {
-          cc.append(div);
-          data = null;
-          div = null;
+                email.val("");
+                pwd.val("");
+              });
+            }
+          }
         }
-      });
-
-      socket.on("privatemessage", (data) => {
-        let { from, message } = data;
-        // console.log(`From ${from} with message ${message}`);
-        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw"> <span class="text-sm">${from} Says: </span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
-
-        if (data.from && data.message && div.length > 0) {
-          cc.append(div);
-          data = null;
-          div = null;
-        }
-      });
-
-      socket.on("broadcast", (data) => {
-        const { title, alert } = data;
-        broadcastTitle.text(title);
-        broadcastBody.text(alert);
-        staticBackdrop.modal("show");
-      });
-
-      socket.on("registrationrequest", (data) => {
-        clientId.val(data.uid);
-        rf.addClass("show");
-        rf.submit((e) => {
-          e.preventDefault();
-          socket.emit("registerme", {
-            email: email.val(),
-            uid: clientId.val(),
-            isAdmin: admin.val(),
-          });
-        });
       });
 
       socket.on("updatedclientlist", (data) => {
@@ -311,7 +316,7 @@
       });
 
       socket.on("registrationcomplete", () => {
-        rf.removeClass("show");
+        alf.removeClass("show");
         ci.addClass("show");
         cf.addClass("show");
       });

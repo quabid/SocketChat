@@ -1,29 +1,54 @@
+require("dotenv").config();
 const express = require("express");
+const bodyParser = require("body-parser");
 const chalk = require("chalk");
 const app = express();
 const path = require("path");
 const server = require("http").createServer(app);
 const io = require("socket.io").listen(server);
-const nanoid = require("nanoid");
+const mongoose = require("mongoose");
+const { log } = require("./custom_modules/Logger");
+const { DB_URI, DB_NAME, DB_USER, DB_USER_PWD } = require("./config");
+
+// body-parser
+app.use(bodyParser.json());
+const Users = require("./models/Users");
+
+// Connect to datastore
+mongoose
+  .connect(DB_URI, {
+    useCreateIndex: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    user: DB_USER,
+    pass: DB_USER_PWD,
+    dbName: DB_NAME,
+  })
+  .then(() => {
+    log(`DB connected`);
+  })
+  .catch((err) => log(err));
 
 // Constants
-const { log } = require("./custom_modules/Logger");
 const PORT = 3000;
 const ADDRESS = process.env.ADDRESS || "0.0.0.0";
-const MESSAGE = chalk.keyword("orange")(`Server started on port ${PORT}`);
+const MESSAGE = chalk.keyword("orange")(`Server started on port ${PORT}\n`);
 const serverStartMessage = () => log(`\n\t${MESSAGE}\n`);
-let clients = [];
+let clients = [],
+  admins = [{ email: "quobod@gmail.com", pwd: "dEeppurple%#" }];
 
 // Configure Routers
 const home = require("./routes/landing");
 const admin = require("./routes/admin");
 
+// Static assets
 app.use(express.static(path.join(__dirname, "public")));
 
 // Set Routes
 app.use("/", home);
 app.use("/admin", admin);
 
+// Start Server
 server.listen(process.env.port || 3000, serverStartMessage);
 
 // Config Socket.io
@@ -99,6 +124,15 @@ io.sockets.on("connection", (socket) => {
       client = null;
       data = null;
     }
+  });
+
+  socket.on("getmyid", () => {
+    socket.emit("hereisyourid", { uid: socket.id });
+  });
+
+  socket.on("adminlogin", (data) => {
+    const { uid, email, password, isAdmin } = data;
+    log(`Admin login data: ${uid} ${email} ${password} ${isAdmin}`);
   });
 });
 

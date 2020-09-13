@@ -156,7 +156,7 @@
 
       <div
         id="chat-conversations"
-        class="container border border-primary rounded mx-md-3 mx-sm-1 my-1 col-sm col-"
+        class="container border border-primary rounded mx-md-3 mx-sm-1 my-1 col-sm col- v-scroll"
       ></div>
     </div>
 
@@ -256,7 +256,7 @@
         let { from, message } = data;
 
         let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw">
-           <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
+           <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
 
         if (data.from && data.message && div.length > 0) {
           cc.append(div);
