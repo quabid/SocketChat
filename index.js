@@ -156,16 +156,14 @@ function signinClient(user, password, socket) {
           switch (res.status.trim()) {
             case "success":
               return socket.emit("signinsuccess");
-
-            default:
-              log(`\n\n\t\tSignin Failed: ${err.message}\n\n`);
-              return socket.emit("signinerror", {
-                errorMessage: `Authentication Failed`,
-              });
           }
         })
         .catch((err) => {
           log(err.status);
+          log(`\n\n\t\tSignin Failed: ${err.message}\n\n`);
+          return socket.emit("signinerror", {
+            errorMessage: `Authentication Failed`,
+          });
         });
     }
   });
