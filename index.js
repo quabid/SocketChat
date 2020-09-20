@@ -7,12 +7,25 @@ const path = require("path");
 const server = require("http").createServer(app);
 const io = require("socket.io").listen(server);
 const mongoose = require("mongoose");
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet("02468ouqtyminv", 13);
+const mongoCollection = `users`;
+const {
+  hashPassword,
+  comparePassword,
+} = require("./custom_modules/PasswordHasher");
 const { log } = require("./custom_modules/Logger");
-const { DB_URI, DB_NAME, DB_USER, DB_USER_PWD } = require("./config");
+const { DB_URI } = require("./config");
+const {
+  stringUtils: { stripemail, truncate },
+} = require("./custom_modules/utils");
 
 // body-parser
 app.use(bodyParser.json());
+
+// Models
 const Users = require("./models/Users");
+const Clients = require("./models/Clients");
 
 // Connect to datastore
 mongoose
@@ -20,12 +33,9 @@ mongoose
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    user: DB_USER,
-    pass: DB_USER_PWD,
-    dbName: DB_NAME,
   })
   .then(() => {
-    log(`${chalk.keyword("orange")('\tDB Connected')}`);
+    log(`${chalk.keyword("orange")("\tDB Connected")}`);
   })
   .catch((err) => log(err));
 
@@ -34,12 +44,14 @@ const PORT = 3000;
 const ADDRESS = process.env.ADDRESS || "0.0.0.0";
 const MESSAGE = chalk.keyword("orange")(`Server started on port ${PORT}\n`);
 const serverStartMessage = () => log(`\n\t${MESSAGE}`);
-let clients = [],
-  admins = [{ email: "quobod@gmail.com", pwd: "dEeppurple%#" }];
+
+let clients = [];
 
 // Configure Routers
 const home = require("./routes/landing");
 const admin = require("./routes/admin");
+const { hash } = require("bcryptjs");
+const { update } = require("./models/Users");
 
 // Static assets
 app.use(express.static(path.join(__dirname, "public")));
@@ -53,130 +65,143 @@ server.listen(process.env.port || 3000, serverStartMessage);
 
 // Config Socket.io
 io.sockets.on("connection", (socket) => {
-  initConnection(socket);
+  // Upon connection
+  socket.emit("signin");
 
-  socket.on("registerme", (data) => {
-    const { email, uid, isAdmin } = data;
-    log(
-      `Registration Request Email: ${email} for ${uid} --> isAdmin: ${isAdmin}`
-    );
-    if (email.length > 0 && uid.length > 0) {
-      const client = findClientById(uid);
-      if (null !== client) {
-        client["email"] = email;
-        client["admin"] = isAdmin;
-        client.channel.emit("registrationcomplete");
-        updateClientList();
+  // User Signin Data
+  socket.on("signmein", (data) => {
+    const { email, password } = data;
+    log(`User Signin Data: Email: ${email}, Password: ${password}`);
+
+    Users.findOne({ email: `${email}` }).exec((err, doc) => {
+      if (err) {
+        log(`\n\n\t\tAn Error Occurred: ${err.message}\n\n`);
+        return socket.emit("signinerror", { errorMessage: `${err.message}` });
       }
-    }
+      if (doc) {
+        // log(doc);
+        log(`Found user proceeding to signin`);
+        signinClient(doc, password, socket);
+      } else {
+        socket.emit("register", { sid: socket.id });
+      }
+    });
   });
 
-  socket.on("disconnect", (reason) => {
-    let client = findClientById(socket.id);
-    if (null !== client && client.email) {
-      log(`Client: ${client.email}, UID: ${client.uid} disconnected`);
-      removeClient(client.uid);
-      client = null;
-      updateClientList();
-    }
-  });
-
-  socket.on("broadcast", (data) => {
-    const { title, alert } = data;
-    socket.broadcast.emit("broadcast", { alert: alert, title: title });
-  });
-
-  socket.on("messagediscreet", (data) => {
-    let { fromUid, toUid, toEmail, fromMessage } = data;
-    let from = findClientById(fromUid);
-    let to = findClientByEmail(toEmail);
+  // User Registration Data
+  socket.on("registerme", (data) => {
+    const { email, fname, lname, pwd1, pwd2, sid } = data;
 
     log(
-      `From ${from.email} with ID: ${from.uid} to ${to.email} with ID ${to.uid} Sending Message: ${fromMessage}`
+      `Registration Data: Email: ${email}, First Name: ${fname}, Last Name: ${lname}, PWD1: ${pwd1}, PWD2: ${pwd2}, SID: ${sid}`
     );
 
-    let message = {
-      from: from.email,
-      message: fromMessage,
-    };
-
-    if (from && to && message) {
-      to.channel.emit("privatemessage", message);
-      from = null;
-      to = null;
-      data = null;
-      message = null;
-    }
-  });
-
-  socket.on("message", (data) => {
-    let { from, message } = data;
-    let client = findClientById(from);
-
-    if (null != client && message.length > 0) {
-      log(`From ${client.email} with message ${message}`);
-      clients.forEach((c) => {
-        c.channel.emit("messagebroadcast", {
-          from: client.email,
-          message: message,
+    if (
+      email.length > 0 &&
+      fname.length > 0 &&
+      lname.length > 0 &&
+      pwd1.length > 0 &&
+      pwd2.length > 0
+    ) {
+      // Registration Passwords Error
+      if (pwd1 !== pwd2) {
+        log(`Passwords don't match: ${pwd1} !== ${pwd2}`);
+        return socket.emit("registration-error", {
+          errorMessage: `Passwords don't match`,
         });
+      } else if (pwd1.length < 6) {
+        log(`Password does not meet minimum requirement`);
+        return socket.emit("registration-error", {
+          errorMessage: `Password must be at least 6 characters`,
+        });
+      }
+
+      const username = `${stripemail(email)}${nanoid()}`;
+      const newUser = {
+        email: `${email}`,
+        isAdmin: false,
+      };
+
+      new Users(newUser).save((err, user) => {
+        if (err) {
+          log(err.message);
+          return socket.emit("registration-error", {
+            errorMessage: `${err.message}`,
+          });
+        }
+
+        createClient(user, fname, lname, username, pwd1, sid, socket);
       });
-      client = null;
-      data = null;
+    } else {
+      return socket.emit("registration-error", {
+        errorMessage: `All fields are required`,
+      });
     }
-  });
-
-  socket.on("getmyid", () => {
-    socket.emit("hereisyourid", { uid: socket.id });
-  });
-
-  socket.on("adminlogin", (data) => {
-    const { uid, email, password, isAdmin } = data;
-    log(`Admin login data: ${uid} ${email} ${password} ${isAdmin}`);
   });
 });
 
-function updateClientList() {
-  clients.map((client) => {
-    const channel = client.channel;
-    const channels = [];
-    clients.forEach((client) => {
-      channels.push({ email: client.email, uid: client.uid });
-    });
-    const strChannels = JSON.stringify(channels);
-    channel.emit("updatedclientlist", { list: strChannels });
+function signinClient(user, password, socket) {
+  log(user._id);
+  Clients.findOne({ user: user._id }, (err, doc) => {
+    if (err) {
+      log(`\n\n\t\tAn Error Occurred: ${err.message}\n\n`);
+      return socket.emit("signinerror", { errorMessage: `${err.message}` });
+    }
+
+    if (doc) {
+      log(`Found client ... commencing signin procedure`);
+      comparePassword(password, doc.password)
+        .then((res) => {
+          log(`Signin Status: ${res.status}`);
+          switch (res.status.trim()) {
+            case "success":
+              return socket.emit("signinsuccess");
+
+            default:
+              log(`\n\n\t\tSignin Failed: ${err.message}\n\n`);
+              return socket.emit("signinerror", {
+                errorMessage: `Authentication Failed`,
+              });
+          }
+        })
+        .catch((err) => {
+          log(err.status);
+        });
+    }
   });
 }
 
-function initConnection(socket) {
-  if (null === findClientById(socket.id)) {
-    addClient(socket);
-    socket.emit("registrationrequest", { uid: socket.id });
-  }
-}
+function createClient(user, fname, lname, username, pwd1, sid, socket) {
+  hashPassword(pwd1, (res) => {
+    const newClient = {
+      user: user._id,
+      firstName: fname,
+      lastName: lname,
+      userName: username,
+      password: res.payload,
+    };
 
-function findClientById(id) {
-  const index = clients.findIndex((x) => x.uid == id);
-  if (-1 !== index) {
-    return clients[index];
-  }
-  return null;
-}
+    new Clients(newClient).save((err, client) => {
+      if (err) {
+        log(err.message);
+        return socket.emit("registration-error", {
+          errorMessage: `${err.message}`,
+        });
+      }
 
-function findClientByEmail(email) {
-  const index = clients.findIndex((x) => x.email == email);
-  if (-1 !== index) {
-    return clients[index];
-  }
-  return null;
-}
+      const cli = {
+        sid: sid,
+        ...client,
+        ...user,
+      };
 
-function addClient(socket) {
-  const newClient = { uid: socket.id, channel: socket };
-  clients = [...clients, newClient];
-}
-
-function removeClient(id) {
-  findClientById(id).channel.disconnect();
-  clients = clients.filter((x) => x.uid != id);
+      clients = [...clients, cli];
+      return socket.emit("registrationsuccess", {
+        username: user.username,
+        email: user.email,
+        fname: cli.firstName,
+        lname: cli.lastName,
+      });
+    });
+  });
 }

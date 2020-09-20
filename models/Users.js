@@ -6,22 +6,7 @@ const UserSchema = new Schema({
   email: {
     type: String,
   },
-  firstName: {
-    type: String,
-  },
-  lastName: {
-    type: String,
-  },
   userName: {
-    type: String,
-  },
-  profileUrl: {
-    type: String,
-  },
-  image: {
-    type: String,
-  },
-  password: {
     type: String,
   },
   isAdmin: { type: Boolean, default: false },
@@ -36,5 +21,5 @@ UserSchema.methods.withoutPassword = function () {
 };
 
 // Create collection and add schema
-const User = mongoose.model("user", UserSchema, "user");
-module.exports = User;
+const Users = mongoose.model("User", UserSchema, "User");
+module.exports = Users;

@@ -14,7 +14,7 @@
     />
 
     <script
-      src="https://kit.fontawesome.com/e13fb8b113.js"
+      src="https://kit.fontawesome.com/294403875a.js"
       crossorigin="anonymous"
     ></script>
     <title>Socket Chat App</title>
@@ -118,44 +118,163 @@
       </div>
     </div>
 
-    <div id="registration-form" class="container">
-      <h2 class="h2 text-center text-primary">App Registration</h2>
-      <form>
-        <div style="justify-items: center; justify-content: center">
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-envelope fw fa-2x"></i>
-            </span>
+    <div id="user-signin-div" class="container">
+      <h2 class="h2 text-center text-primary">Sign In</h2>
 
-            <input
-              type="email"
-              id="email"
-              placeholder="Enter Email"
-              class="form-control form-control-lg"
-            />
+      <form id="user-signin-form" class="container" style="row-gap: 0.4rem">
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-envelope fw fa-2x"></i>
+          </span>
 
-            <input
-              type="hidden"
-              id="uid"
-              class="form-control form-control-lg"
-            />
-
-            <input
-              type="hidden"
-              id="admin"
-              value="false"
-              class="form-control form-control-lg"
-            />
-          </div>
+          <input
+            type="email"
+            id="signin-email"
+            placeholder="Enter Email"
+            class="form-control form-control-lg"
+            required
+          />
         </div>
+
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-lock fw fa-2x"></i>
+          </span>
+
+          <input
+            id="signin-pwd"
+            type="password"
+            class="form-control form-control-lg"
+            placeholder="Enter Password"
+            required
+          />
+        </div>
+
+        <input type="hidden" id="_uid" class="form-control form-control-lg" />
+        <input type="hidden" id="_sid" class="form-control form-control-lg" />
+        <input
+          type="hidden"
+          id="isAdmin"
+          value="false"
+          class="form-control form-control-lg"
+        />
+        <input
+          type="hidden"
+          id="userName"
+          class="form-control form-control-lg"
+          email
+        />
+
+        <input type="submit" value="submit" class="btn btn-primary" />
       </form>
+
+      <span class="my-1 ml-3 text-primary">
+        <a id="registration-link" href="#"
+          >Don't have an account? Register here.</a
+        >
+      </span>
+
+      <div class="input-group signin-err-div my-1">
+        <p
+          id="signin-err-para"
+          class="form-control-lg text-danger mx-0 my-0"
+        ></p>
+      </div>
     </div>
 
-    <div id="chat-interface" class="row fixed-top ml-2">
+    <div id="user-registration-div" class="container">
+      <h2 class="h2 text-center text-primary">Sign Up</h2>
+      <form
+        id="user-registration-form"
+        class="container"
+        style="row-gap: 0.4rem"
+      >
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-user fw fa-2x"></i>
+          </span>
+
+          <input
+            type="text"
+            id="firstName"
+            placeholder="First Name"
+            class="form-control form-control-lg"
+            required
+          />
+        </div>
+
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-user fw fa-2x"></i>
+          </span>
+
+          <input
+            type="text"
+            id="lastName"
+            placeholder="Last Name"
+            class="form-control form-control-lg"
+            required
+          />
+        </div>
+
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-envelope fw fa-2x"></i>
+          </span>
+
+          <input
+            type="email"
+            id="reg-email"
+            placeholder="Enter Email"
+            class="form-control form-control-lg"
+            required
+          />
+        </div>
+
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-lock fw fa-2x"></i>
+          </span>
+
+          <input
+            type="password"
+            id="registration-pwd1"
+            placeholder="Create Password"
+            class="form-control form-control-lg"
+            required
+          />
+        </div>
+
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-lock fw fa-2x"></i>
+          </span>
+
+          <input
+            type="password"
+            id="registration-pwd2"
+            placeholder="Confirm Password"
+            class="form-control form-control-lg"
+            required
+          />
+        </div>
+
+        <input type="submit" value="submit" class="btn btn-primary" />
+      </form>
+
+      <div class="input-group registration-err-div my-1">
+        <p
+          id="registration-err-para"
+          class="form-control-lg text-danger mx-0 my-0"
+        ></p>
+      </div>
+    </div>
+
+    <div id="chat-interface-div" class="row fixed-top ml-2">
       <ul id="chat-user-list" class="list-group mx-1 my-1 col-"></ul>
 
       <div
-        id="chat-conversations"
+        id="chat-conversations-div"
         class="container border border-primary rounded mx-md-3 mx-sm-1 my-1 col-sm col- v-scroll"
       ></div>
     </div>
@@ -206,114 +325,110 @@
 
     <script>
       const socket = io();
-      const rf = $("#registration-form");
-      const clientId = $("#uid");
-      const email = $("#email");
-      const admin = $("#admin");
-      const ci = $("#chat-interface");
-      const cul = $("#chat-user-list");
-      const cf = $("#chat-form");
-      const cc = $("#chat-conversations");
-      const msg = $("#message");
-      const broadcastTitle = $(".broadcast-title");
-      const broadcastBody = $(".broadcast-body");
-      const staticBackdrop = $("#staticBackdrop");
-      const privateMessenger = $("#privateMessenger");
-      const privateMessageLabel = $("#privateMessageLabel");
-      const privateMessageSend = $("#privateMessageSend");
-      const privateMessageForm = $("#privateMessageForm");
-      const privateMessageTextarea = $("#privateMessageTextarea");
+      const log = (arg = "") => console.log(arg);
+      const cls = () => console.clear();
 
-      /* $.when($.ready).then(function () {
-        // Document is ready.
-        socket.emit("checkregistration");
-      }); */
+      // Signin
+      const userSigninDiv = $("#user-signin-div");
+      const userSigninForm = $("#user-signin-form");
+      const signinEmail = $("#signin-email");
+      const signinPwd = $("#signin-pwd");
+      const userName = $("#userName");
+      const _uid = $("#_uid");
+      const _sid = $("#_sid");
+      const isAdmin = $("#isAdmin");
+      const signinErrDiv = $(".signin-err-div");
+      const signinErrPara = $("#signin-err-para");
 
-      function handleItemClick(e) {
-        privateMessageLabel.text(`Send To ${e.getAttribute("data-email")}`);
-        privateMessageSend.click(() => {
-          socket.emit("messagediscreet", {
-            toUid: e.getAttribute("data-uid"),
-            toEmail: e.getAttribute("data-email"),
-            fromMessage: privateMessageTextarea.val(),
-            fromUid: clientId.val(),
+      // Registration
+      const firstName = $("#firstName");
+      const lastName = $("#lastName");
+      const regEmail = $("#reg-email");
+      const registrationDiv = $("#user-registration-div");
+      const registrationForm = $("#user-registration-form");
+      const registrationPwd1 = $("#registration-pwd1");
+      const registrationPwd2 = $("#registration-pwd2");
+      const registrationErrDiv = $(".registration-err-div");
+      const registrationErrPara = $("#registration-err-para");
+      const registrationLink = $("#registration-link");
+
+      const chatInterfaceDiv = $("#chat-interface-div");
+      const chatUserList = $("#chat-user-list");
+      const chatConversationsDiv = $("#chat-conversations-div");
+      const chatForm = $("#chat-form");
+
+      registrationLink.click((e) => {
+        userSigninDiv.removeClass("show");
+        registrationDiv.addClass("show");
+      });
+
+      // Signin
+      socket.on("signin", () => {
+        log(`Signin requested from server`);
+        userSigninDiv.addClass("show");
+        userSigninForm.submit((e) => {
+          e.preventDefault();
+          socket.emit("signmein", {
+            email: signinEmail.val(),
+            password: signinPwd.val(),
           });
-          privateMessageTextarea.val("");
-          privateMessenger.modal("hide");
         });
-        privateMessenger.modal("show");
-      }
-
-      cf.submit((e) => {
-        e.preventDefault();
-        // socket.emit("broadcast", { alert: msg.val() });
-        // msg.val("");
-        socket.emit("message", { from: clientId.val(), message: msg.val() });
-        msg.val("");
       });
 
-      socket.on("messagebroadcast", (data) => {
-        let { from, message } = data;
-
-        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw">
-           <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
-
-        if (data.from && data.message && div.length > 0) {
-          cc.append(div);
-          data = null;
-          div = null;
-        }
+      // Signin Error
+      socket.on("signinerror", (data) => {
+        const { errorMessage } = data;
+        signinErrDiv.addClass("show");
+        signinErrPara.text(errorMessage);
       });
 
-      socket.on("privatemessage", (data) => {
-        let { from, message } = data;
-        // console.log(`From ${from} with message ${message}`);
-        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw"> <span class="text-sm">${from} Says: </span> </i></span><textarea class="lead form-control form-control-lg">${message}</textarea></div></div>`;
-
-        if (data.from && data.message && div.length > 0) {
-          cc.append(div);
-          data = null;
-          div = null;
-        }
+      // Signin Success
+      socket.on("signinsuccess", () => {
+        signinErrDiv.removeClass("show");
+        signinErrPara.text("");
+        userSigninDiv.removeClass("show");
+        registrationDiv.removeClass("show");
+        chatInterfaceDiv.addClass("show");
+        chatConversationsDiv.addClass("show");
+        chatForm.addClass("show");
       });
 
-      socket.on("broadcast", (data) => {
-        const { title, alert } = data;
-        broadcastTitle.text(title);
-        broadcastBody.text(alert);
-        staticBackdrop.modal("show");
-      });
+      // Registration Request From Server
+      socket.on("register", (data) => {
+        const { sid } = data;
+        _sid.val(sid);
+        userSigninDiv.removeClass("show");
+        registrationDiv.addClass("show");
 
-      socket.on("registrationrequest", (data) => {
-        clientId.val(data.uid);
-        rf.addClass("show");
-        rf.submit((e) => {
+        registrationForm.submit((e) => {
           e.preventDefault();
           socket.emit("registerme", {
-            email: email.val(),
-            uid: clientId.val(),
-            isAdmin: admin.val(),
+            email: regEmail.val(),
+            fname: firstName.val(),
+            lname: lastName.val(),
+            pwd1: registrationPwd1.val(),
+            pwd2: registrationPwd2.val(),
+            sid: _sid.val(),
           });
         });
       });
 
-      socket.on("updatedclientlist", (data) => {
-        const { list } = data;
-        cul.empty();
-        const clients = JSON.parse(list);
-        clients.map((client) => {
-          if (client.email && client.uid != clientId.val()) {
-            const li = `<li onclick="handleItemClick(this)" class="list-group-item" data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
-            // console.log(li);
-            cul.append(li);
-          }
-        });
+      socket.on("registration-error", (data) => {
+        const { errorMessage } = data;
+        registrationErrDiv.addClass("show");
+        registrationErrPara.text(errorMessage);
       });
 
-      socket.on("registrationcomplete", () => {
-        rf.removeClass("show");
-        ci.addClass("show");
-        cf.addClass("show");
+      socket.on("registrationsuccess", (data) => {
+        const { email, username, lname, fname } = data;
+        log(
+          `Registration Successful - Email: ${email}, Username: ${username}, "Last Name": ${lname}, "First Name": ${fname}`
+        );
+
+        registrationErrDiv.removeClass("show");
+        registrationErrPara.text("");
+        registrationDiv.removeClass("show");
+        userSigninDiv.addClass("show");
       });
     </script>
   </body>

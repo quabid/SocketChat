@@ -315,10 +315,17 @@
         });
       });
 
-      socket.on("registrationcomplete", () => {
+      socket.on("adminloginsuccess", () => {
         alf.removeClass("show");
         ci.addClass("show");
         cf.addClass("show");
+      });
+
+      socket.on('adminloginfail', data => {
+        const { status, cause} = data;
+        broadcastTitle.text(status);
+        broadcastBody.text(cause);
+        staticBackdrop.modal("show");
       });
     </script>
   </body>
