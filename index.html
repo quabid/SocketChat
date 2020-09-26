@@ -374,6 +374,7 @@
       const chatUserList = $("#chat-user-list");
       const chatConversationsDiv = $("#chat-conversations-div");
       const chatForm = $("#chat-form");
+      const message = $("#message");
 
       // Broadcasting and Private Messaging
       const broadcastTitle = $(".broadcast-title");
@@ -445,6 +446,19 @@
         cc.append(div);
       });
 
+      socket.on("message", (data) => {
+        let { from, message } = data;
+
+        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw">
+       <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+
+        if (data.from && data.message && div.length > 0) {
+          cc.append(div);
+          data = null;
+          div = null;
+        }
+      });
+
       // Signin
       socket.on("signin", () => {
         log(`Signin requested from server`);
@@ -486,6 +500,14 @@
         chatInterfaceDiv.addClass("show");
         chatConversationsDiv.addClass("show");
         chatForm.addClass("show");
+
+        chatForm.submit((e) => {
+          e.preventDefault();
+          cls();
+          log(`Message: ${message.val()} From: ${_sid.val()}`);
+          socket.emit("message", { from: _sid.val(), message: message.val() });
+          message.val("");
+        });
       });
 
       // Registration Request From Server

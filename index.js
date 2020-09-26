@@ -148,12 +148,16 @@ io.sockets.on("connection", (socket) => {
 
   // User Disconnected
   socket.on("disconnect", (reason) => {
-    let client = findClientById(socket.id);
+    removeClient(socket.id);
+    updateClientList();
+  });
+
+  socket.on("message", (data) => {
+    let { from, message } = data,
+      client = findClientById(from);
+
     if (null !== client) {
-      // log(`Client: ${client.email}, UID: ${client.uid} disconnected`);
-      removeClient(socket.id);
-      client = null;
-      updateClientList();
+      log(`Client ${client.fname} ${client.lname} sent ${message}`);
     }
   });
 
@@ -267,11 +271,9 @@ function purgeClientList() {
 }
 
 function findClientById(id) {
-  clients = clients.filter((x) => x.sid == id);
-  updateClientList();
+  return clients.find((x) => x.sid == id) || null;
 }
 
 function removeClient(id) {
-  let client = findClientById(id);
-  log(`disconnect client ${id}`);
+  clients = clients.filter((x) => x.sid != id);
 }
