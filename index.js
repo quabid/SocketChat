@@ -244,6 +244,14 @@ function signedIn(socket, doc, user) {
     email,
   };
 
+  _client = findClientByEmail(user.email);
+
+  if (null !== _client) {
+    return socket.emit("alreadysignedin", {
+      message: `User ${user.email} is already signed in`,
+    });
+  }
+
   addClient(client);
 
   return socket.emit("signinsuccess", {
@@ -257,7 +265,7 @@ function signedIn(socket, doc, user) {
 
 function addClient(client) {
   clients = [...clients, { ...client }];
-  log(clients);
+  // log(clients);
 }
 
 function createClient(user, fname, lname, pwd1, socket) {
@@ -298,6 +306,10 @@ function purgeClientList() {
 
 function findClientById(id) {
   return clients.find((x) => x.sid == id) || null;
+}
+
+function findClientByEmail(email) {
+  return clients.find((x) => x.email == email) || null;
 }
 
 function removeClient(id) {

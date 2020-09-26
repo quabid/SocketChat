@@ -461,6 +461,13 @@
         }
       });
 
+      // Already Signed In
+      socket.on('alreadysignedin', data => {
+        let {message} = data;
+        signinErrDiv.addClass("show");
+        signinErrPara.text(message);
+      });
+
       // Signin
       socket.on("signin", () => {
         log(`Signin requested from server`);
