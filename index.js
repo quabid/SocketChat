@@ -154,11 +154,21 @@ io.sockets.on("connection", (socket) => {
 
   socket.on("message", (data) => {
     let { from, message } = data,
-      client = findClientById(from);
+      _from = findClientById(from);
 
-    if (null !== client) {
-      log(`Client ${client.fname} ${client.lname} sent ${message}`);
+    if (null !== _from) {
+      log(`Client ${_from.fname} ${_from.lname} sent ${message}`);
     }
+
+    clients.forEach((client) => {
+      client.channel.emit("message", {
+        from: `${_from.fname} ${_from.lname}`,
+        message: message,
+      });
+    });
+
+    _from = null;
+    data = null;
   });
 
   socket.on("discreetmessage", (data) => {
@@ -173,6 +183,22 @@ io.sockets.on("connection", (socket) => {
     log(
       `From SID: ${fromClientSid}, From Message: ${fromClientMessage}, To SID: ${toClientSid}`
     );
+
+    let from = findClientById(fromClientSid),
+      to = findClientById(toClientSid);
+
+    if (null !== from && null !== to) {
+      let message = {
+        from: `${from.fname} ${from.lname}`,
+        message: fromClientMessage,
+      };
+      to.channel.emit("privatemessage", message);
+      from = null;
+      to = null;
+      message = null;
+      data = null;
+    }
+
     return;
   });
 });
