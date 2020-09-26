@@ -275,5 +275,10 @@ function findClientById(id) {
 }
 
 function removeClient(id) {
+  let client = findClientById(id);
+  if (null !== client) {
+    client.channel.disconnect(true);
+  }
+  client = null;
   clients = clients.filter((x) => x.sid != id);
 }

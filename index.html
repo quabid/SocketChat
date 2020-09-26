@@ -96,14 +96,6 @@
                   rows="3"
                 ></textarea>
               </div>
-
-              <button
-                id="privateMessageSendButton"
-                type="submit"
-                class="btn btn-primary my-1"
-              >
-                Send
-              </button>
             </form>
           </div>
           <div class="modal-footer">
@@ -113,6 +105,14 @@
               data-dismiss="modal"
             >
               Close
+            </button>
+
+            <button
+              id="privateMessageSendButton"
+              type="submit"
+              class="btn btn-primary my-1"
+            >
+              Send
             </button>
           </div>
         </div>
@@ -397,18 +397,19 @@
 
         privateMessageForm.submit((e) => {
           e.preventDefault();
-          privateMessageLabel.text(`Send To ${toClientEmail}`);
-          privateMessageSendButton.click(() => {
-            socket.emit("discreetmessage", {
-              toClientEmail: toClientEmail,
-              toClientUid: toClientUid,
-              toClientSid: toClientSid,
-              fromClientMessage: privateMessageTextarea.val(),
-              fromClientSid: _sid.val(),
-            });
-            privateMessageTextarea.val("");
-            privateMessenger.modal("hide");
+        });
+
+        privateMessageLabel.text(`Send To ${toClientEmail}`);
+        privateMessageSendButton.click(() => {
+          socket.emit("discreetmessage", {
+            toClientEmail: toClientEmail,
+            toClientUid: toClientUid,
+            toClientSid: toClientSid,
+            fromClientMessage: privateMessageTextarea.val(),
+            fromClientSid: _sid.val(),
           });
+          privateMessageTextarea.val("");
+          privateMessenger.modal("hide");
         });
       }
 
