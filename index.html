@@ -107,7 +107,7 @@
               Close
             </button>
             <button
-              id="privateMessageSend"
+              id="privateMessageSendButton"
               type="button"
               class="btn btn-primary"
             >
@@ -160,9 +160,20 @@
         />
         <input
           type="hidden"
-          id="userName"
+          id="_firstName"
           class="form-control form-control-lg"
-          email
+        />
+
+        <input
+          type="hidden"
+          id="_lastName"
+          class="form-control form-control-lg"
+        />
+
+        <input
+          type="hidden"
+          id="_userName"
+          class="form-control form-control-lg"
         />
 
         <input type="submit" value="submit" class="btn btn-primary" />
@@ -336,7 +347,9 @@
       const userSigninForm = $("#user-signin-form");
       const signinEmail = $("#signin-email");
       const signinPwd = $("#signin-pwd");
-      const userName = $("#userName");
+      const _userName = $("#_userName");
+      const _firstName = $("#_firstName");
+      const _lastName = $("#_lastName");
       const _uid = $("#_uid");
       const _sid = $("#_sid");
       const isAdmin = $("#isAdmin");
@@ -355,14 +368,80 @@
       const registrationErrPara = $("#registration-err-para");
       const registrationLink = $("#registration-link");
 
+      // Messaging
       const chatInterfaceDiv = $("#chat-interface-div");
       const chatUserList = $("#chat-user-list");
       const chatConversationsDiv = $("#chat-conversations-div");
       const chatForm = $("#chat-form");
 
+      // Broadcasting and Private Messaging
+      const broadcastTitle = $(".broadcast-title");
+      const broadcastBody = $(".broadcast-body");
+      const staticBackdrop = $("#staticBackdrop");
+      const privateMessenger = $("#privateMessenger");
+      const privateMessageLabel = $("#privateMessageLabel");
+      const privateMessageSendButton = $("#privateMessageSendButton");
+      const privateMessageForm = $("#privateMessageForm");
+      const privateMessageTextarea = $("#privateMessageTextarea");
+
+      function handleItemClick(e) {
+        const toClientUid = e.getAttribute("data-uid");
+        const toClientSid = e.getAttribute("data-sid");
+        const toClientEmail = e.getAttribute("data-email");
+        const fromClientSid = _sid.val();
+        const fromClientMessage = privateMessageTextarea.val();
+        privateMessageLabel.text(`Send To ${toClientEmail}`);
+        privateMessenger.modal("show");
+
+        privateMessageForm.submit((e) => {
+          e.preventDefault();
+          privateMessageLabel.text(`Send To ${e.getAttribute("data-email")}`);
+          privateMessageSendButton.click(() => {
+            socket.emit("discreetmessage", {
+              toClientEmail: toClientEmail,
+              toClientUid: toClientUid,
+              toClientSid: toClientSid,
+              fromClientMessage: privateMessageTextarea.val(),
+              fromClientSid: _sid.val(),
+            });
+            privateMessageTextarea.val("");
+            privateMessenger.modal("hide");
+          });
+        });
+      }
+
       registrationLink.click((e) => {
         userSigninDiv.removeClass("show");
         registrationDiv.addClass("show");
+      });
+
+      socket.on("updatedclientlist", (data) => {
+        const { clientList } = data;
+        chatUserList.empty();
+        const clients = JSON.parse(clientList);
+
+        clients.forEach((client) => {
+          if (client.email && client.sid != _sid.val()) {
+            const li = `<li onclick="handleItemClick(this)" class="list-group-item" data-sid=${client.sid} data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
+            // console.log(li);
+            chatUserList.append(li);
+          }
+        });
+      });
+
+      socket.on("broadcast", (data) => {
+        const { title, alert } = data;
+        broadcastTitle.text(title);
+        broadcastBody.text(alert);
+        staticBackdrop.modal("show");
+      });
+
+      socket.on("privatemessage", (data) => {
+        const { from, message } = data;
+        console.log(`From ${from} with message ${message}`);
+        const div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw fa-2x"> <span class="text-lg">${from}</span> </i></span><p class="lead">${message}</p></div></div>`;
+
+        cc.append(div);
       });
 
       // Signin
@@ -386,7 +465,19 @@
       });
 
       // Signin Success
-      socket.on("signinsuccess", () => {
+      socket.on("signinsuccess", (data) => {
+        const { sid, uid, username, fname, lname } = data;
+        _uid.val(uid);
+        _sid.val(sid);
+        _firstName.val(fname);
+        _lastName.val(lname);
+        _userName.val(username);
+        socket.emit("updateclientlist");
+
+        /*   log(
+          `Sign in data from server: SID: ${sid}, UID: ${uid}, Username: ${username}, "First Name": ${fname}, "Last Name": ${lname}`
+        ); */
+
         signinErrDiv.removeClass("show");
         signinErrPara.text("");
         userSigninDiv.removeClass("show");
@@ -411,7 +502,6 @@
             lname: lastName.val(),
             pwd1: registrationPwd1.val(),
             pwd2: registrationPwd2.val(),
-            sid: _sid.val(),
           });
         });
       });
@@ -423,10 +513,7 @@
       });
 
       socket.on("registrationsuccess", (data) => {
-        const { email, username, lname, fname } = data;
-        log(
-          `Registration Successful - Email: ${email}, Username: ${username}, "Last Name": ${lname}, "First Name": ${fname}`
-        );
+        log(`Registration Successful`);
 
         registrationErrDiv.removeClass("show");
         registrationErrPara.text("");

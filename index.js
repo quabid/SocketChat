@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
+const stringify = require("fast-safe-stringify");
 const chalk = require("chalk");
 const app = express();
 const path = require("path");
@@ -18,6 +19,7 @@ const { log } = require("./custom_modules/Logger");
 const { DB_URI } = require("./config");
 const {
   stringUtils: { stripemail, truncate },
+  stringUtils,
 } = require("./custom_modules/utils");
 
 // body-parser
@@ -90,10 +92,10 @@ io.sockets.on("connection", (socket) => {
 
   // User Registration Data
   socket.on("registerme", (data) => {
-    const { email, fname, lname, pwd1, pwd2, sid } = data;
+    const { email, fname, lname, pwd1, pwd2 } = data;
 
     log(
-      `Registration Data: Email: ${email}, First Name: ${fname}, Last Name: ${lname}, PWD1: ${pwd1}, PWD2: ${pwd2}, SID: ${sid}`
+      `Registration Data: Email: ${email}, First Name: ${fname}, Last Name: ${lname}, PWD1: ${pwd1}, PWD2: ${pwd2}`
     );
 
     if (
@@ -119,6 +121,7 @@ io.sockets.on("connection", (socket) => {
       const username = `${stripemail(email)}${nanoid()}`;
       const newUser = {
         email: `${email}`,
+        userName: username,
         isAdmin: false,
       };
 
@@ -130,13 +133,43 @@ io.sockets.on("connection", (socket) => {
           });
         }
 
-        createClient(user, fname, lname, username, pwd1, sid, socket);
+        createClient(user, fname, lname, pwd1, socket);
       });
     } else {
       return socket.emit("registration-error", {
         errorMessage: `All fields are required`,
       });
     }
+  });
+
+  socket.on("updateclientlist", () => {
+    updateClientList();
+  });
+
+  // User Disconnected
+  socket.on("disconnect", (reason) => {
+    let client = findClientById(socket.id);
+    if (null !== client) {
+      // log(`Client: ${client.email}, UID: ${client.uid} disconnected`);
+      removeClient(socket.id);
+      client = null;
+      updateClientList();
+    }
+  });
+
+  socket.on("discreetmessage", (data) => {
+    let {
+      toClientUid,
+      toClientSid,
+      toClientEmail,
+      fromClientSid,
+      fromClientMessage,
+    } = data;
+
+    log(
+      `From SID: ${fromClientSid}, From Message: ${fromClientMessage}, To SID: ${toClientSid}`
+    );
+    return;
   });
 });
 
@@ -155,7 +188,7 @@ function signinClient(user, password, socket) {
           log(`Signin Status: ${res.status}`);
           switch (res.status.trim()) {
             case "success":
-              return socket.emit("signinsuccess");
+              return signedIn(socket, doc, user);
           }
         })
         .catch((err) => {
@@ -169,13 +202,40 @@ function signinClient(user, password, socket) {
   });
 }
 
-function createClient(user, fname, lname, username, pwd1, sid, socket) {
+function signedIn(socket, doc, user) {
+  const fname = doc.firstName,
+    lname = doc.lastName,
+    email = user.email;
+  const client = {
+    sid: socket.id,
+    channel: socket,
+    fname,
+    lname,
+    email,
+  };
+
+  addClient(client);
+
+  return socket.emit("signinsuccess", {
+    uid: user._id,
+    sid: socket.id,
+    username: user.userName,
+    fname: doc.firstName,
+    lname: doc.lastName,
+  });
+}
+
+function addClient(client) {
+  clients = [...clients, { ...client }];
+  log(clients);
+}
+
+function createClient(user, fname, lname, pwd1, socket) {
   hashPassword(pwd1, (res) => {
     const newClient = {
       user: user._id,
       firstName: fname,
       lastName: lname,
-      userName: username,
       password: res.payload,
     };
 
@@ -187,19 +247,31 @@ function createClient(user, fname, lname, username, pwd1, sid, socket) {
         });
       }
 
-      const cli = {
-        sid: sid,
-        ...client,
-        ...user,
-      };
-
-      clients = [...clients, cli];
-      return socket.emit("registrationsuccess", {
-        username: user.username,
-        email: user.email,
-        fname: cli.firstName,
-        lname: cli.lastName,
-      });
+      return socket.emit("registrationsuccess");
     });
   });
+}
+
+function updateClientList() {
+  let strClients = stringify(clients);
+  clients.forEach((client) => {
+    client.channel.emit("updatedclientlist", {
+      clientList: strClients,
+    });
+  });
+  strClients = null;
+}
+
+function purgeClientList() {
+  clients = [];
+}
+
+function findClientById(id) {
+  clients = clients.filter((x) => x.sid == id);
+  updateClientList();
+}
+
+function removeClient(id) {
+  let client = findClientById(id);
+  log(`disconnect client ${id}`);
 }
