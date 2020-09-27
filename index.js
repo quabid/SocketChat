@@ -379,14 +379,7 @@ function checkAdminCredentials(id, email, pwd, socket) {
             // log(res);
             switch (_res.status) {
               case "success":
-                let greeting = createGreeting(res);
-                return socket.emit("adminloginsuccsess", {
-                  greeting: greeting,
-                  sid: socket.id,
-                  uid: id,
-                  fname: firstName,
-                  lname: lastName,
-                });
+                return adminLoginSuccess(res, socket, id, firstName, lastName);
             }
           })
           .catch((err) => {
@@ -400,6 +393,17 @@ function checkAdminCredentials(id, email, pwd, socket) {
     .catch((err) => {
       return log(err.message);
     });
+}
+
+function adminLoginSuccess(res, socket, id, firstName, lastName) {
+  let greeting = createGreeting(res);
+  return socket.emit("adminloginsuccsess", {
+    greeting: greeting,
+    sid: socket.id,
+    uid: id,
+    fname: firstName,
+    lname: lastName,
+  });
 }
 
 function adminLoginFailed(socket) {
