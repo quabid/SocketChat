@@ -223,11 +223,18 @@ io.sockets.on("connection", (socket) => {
             checkAdminCredentials(_id, email, password, socket);
           }
         } else {
-          return socket.emit("usernotfound");
+          return socket.emit("adminloginfail", {
+            status: `Authentication Failure`,
+            cause: `Must be an administrator`,
+          });
         }
       })
       .catch((err) => {
         log(err);
+        socket.emit("adminloginfail", {
+          status: `Authentication Failure`,
+          cause: `Must be an administrator`,
+        });
       });
 
     return;
@@ -409,7 +416,7 @@ function adminLoginSuccess(res, socket, id, firstName, lastName) {
 function adminLoginFailed(socket) {
   return socket.emit("adminloginfail", {
     status: `Authentication Failure`,
-    cause: `Invalid Credentials`
+    cause: `Invalid Credentials`,
   });
 }
 
@@ -426,4 +433,3 @@ function createGreeting(res) {
   }
   return greeting;
 }
-
