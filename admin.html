@@ -172,6 +172,20 @@
               value="false"
               class="form-control form-control-lg"
             />
+
+            <input
+              type="hidden"
+              id="admin-fname"
+              value="false"
+              class="form-control form-control-lg"
+            />
+
+            <input
+              type="hidden"
+              id="admin-lname"
+              value="false"
+              class="form-control form-control-lg"
+            />
           </div>
 
           <div class="input-group">
@@ -243,6 +257,8 @@
       const adminUid = $("#admin-uid");
       const adminSid = $("#admin-sid");
       const isAdmin = $("#isAdmin");
+      const adminFname = $("#admin-fname");
+      const adminLname = $("#admin-lname");
 
       // Admin Login
       const adminLoginDiv = $("#admin-login-div");
@@ -345,8 +361,13 @@
       });
 
       socket.on("adminloginsuccsess", (data) => {
-        const { greeting } = data;
-        log(greeting);
+        const { greeting, uid, sid, fname, lname } = data;
+        adminUid.val(uid);
+        adminSid.val(sid);
+        adminFname.val(fname);
+        adminLname.val(lname);
+
+        log(data);
         adminLoginDiv.removeClass("show");
         chatInterfaceDiv.addClass("show");
         chatForm.addClass("show");
