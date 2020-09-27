@@ -22,6 +22,7 @@
 
   <body class="container-fluid" style="grid-auto-rows: auto">
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
     <div class="broadcast">
       <div
         class="modal fade"
@@ -380,6 +381,10 @@
       const signinErrPara = $("#signin-err-para");
       const forgotPasswordLink = $("#forgot-password-link");
 
+      // User Bar
+      const userBar = $("#user-bar");
+      const userTitle = $("#user-title");
+
       // Forgot Password
       const forgotPasswordDiv = $("#forgot-password-div");
       const forgotPasswordForm = $("#forgot-password-form");
@@ -477,7 +482,8 @@
         const { from, message } = data;
         console.log(`From ${from} with message ${message}`);
         const div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
-           <span class="text-left mr-1">${from}</span> </i></span><p class="lead ml-2 text-lg">${message}</p></div></div>`;
+           <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
 
         chatConversationsDiv.append(div);
       });
@@ -485,8 +491,9 @@
       socket.on("message", (data) => {
         let { from, message } = data;
 
-        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text"><i class="fas fa-user fw">
-       <span class="text-sm">${from}</span> </i></span><textarea class="lead form-control form-control-lg" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
+       <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
 
         if (data.from && data.message && div.length > 0) {
           chatConversationsDiv.append(div);
@@ -543,6 +550,8 @@
         chatInterfaceDiv.addClass("show");
         chatConversationsDiv.addClass("show");
         chatForm.addClass("show");
+        userBar.addClass("show");
+        userTitle.append(`<p class="lead">${fname} ${lname}</p>`);
 
         chatForm.submit((e) => {
           e.preventDefault();

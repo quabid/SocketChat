@@ -52,8 +52,6 @@ let clients = [];
 // Configure Routers
 const home = require("./routes/landing");
 const admin = require("./routes/admin");
-const { hash } = require("bcryptjs");
-const { update } = require("./models/Users");
 
 // Static assets
 app.use(express.static(path.join(__dirname, "public")));
