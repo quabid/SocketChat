@@ -459,7 +459,7 @@
 
       socket.on("updatedclientlist", (data) => {
         const { clientList } = data;
-        $('li.list-group-item').remove('.not-needed')
+        $("li.list-group-item").remove(".not-needed");
         const clients = JSON.parse(clientList);
 
         clients.forEach((client) => {

@@ -201,6 +201,37 @@ io.sockets.on("connection", (socket) => {
 
     return;
   });
+
+  // Admin
+  socket.on("adminlogin", (data) => {
+    let { email, password } = data;
+
+    log(`Admin Login Data --> Email: ${email}, Password: ${password}\n`);
+
+    Users.findOne({ email: `${email}` })
+      .then((res) => {
+        if (res) {
+          const { isAdmin, _id } = res;
+
+          if (!isAdmin) {
+            return socket.emit("adminloginfail", {
+              status: `Authentication Failure`,
+              cause: `Must be an administrator`,
+            });
+          } else {
+            // Check admin credentials
+            checkAdminCredentials(_id, email, password, socket);
+          }
+        } else {
+          return socket.emit("usernotfound");
+        }
+      })
+      .catch((err) => {
+        log(err);
+      });
+
+    return;
+  });
 });
 
 function signinClient(user, password, socket) {
@@ -260,7 +291,7 @@ function signedIn(socket, doc, user) {
   if (hour >= 0 && hour < 12) {
     greeting = `Good Morning ${cap(doc.firstName)}`;
   } else if (hour >= 12 && hour < 17) {
-    greeting = `Good Afernoon ${cap(doc.firstName)}`;
+    greeting = `Good Afternoon ${cap(doc.firstName)}`;
   } else {
     greeting = `Good Evening ${cap(doc.firstName)}`;
   }
@@ -335,3 +366,60 @@ function removeClient(id) {
   client = null;
   clients = clients.filter((x) => x.sid != id);
 }
+
+function checkAdminCredentials(id, email, pwd, socket) {
+  Clients.findOne({ user: `${id}` })
+    .populate("user")
+    .then((res) => {
+      if (res) {
+        // log(res);
+        const { firstName, lastName, password } = res;
+        comparePassword(pwd, password)
+          .then((_res) => {
+            // log(res);
+            switch (_res.status) {
+              case "success":
+                let greeting = createGreeting(res);
+                return socket.emit("adminloginsuccsess", {
+                  greeting: greeting,
+                  sid: socket.id,
+                  uid: id,
+                  fname: firstName,
+                  lname: lastName,
+                });
+            }
+          })
+          .catch((err) => {
+            log(err);
+            return adminLoginFailed(socket);
+          });
+      } else {
+        return log(`Client not found`);
+      }
+    })
+    .catch((err) => {
+      return log(err.message);
+    });
+}
+
+function adminLoginFailed(socket) {
+  return socket.emit("adminloginfail", {
+    status: `Authentication Failure`,
+    cause: `Invalid Credentials`
+  });
+}
+
+function createGreeting(res) {
+  let hour = new Date().getHours(),
+    greeting;
+
+  if (hour >= 0 && hour < 12) {
+    greeting = `Good Morning ${cap(res.firstName)}`;
+  } else if (hour >= 12 && hour < 17) {
+    greeting = `Good Afternoon ${cap(res.firstName)}`;
+  } else {
+    greeting = `Good Evening ${cap(res.firstName)}`;
+  }
+  return greeting;
+}
+

@@ -22,7 +22,7 @@
 
   <body class="container-fluid" style="grid-auto-rows: auto">
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div class="broadcast">
+    <div class="broadcast-div">
       <div
         class="modal fade"
         id="staticBackdrop"
@@ -118,9 +118,9 @@
       </div>
     </div>
 
-    <div id="admin-login-form" class="container">
+    <div id="admin-login-div" class="container">
       <h2 class="h2 text-center text-primary">Admin Login</h2>
-      <form id="login-form">
+      <form id="admin-login-form">
         <div
           style="
             justify-items: center;
@@ -136,7 +136,7 @@
 
             <input
               type="email"
-              id="email"
+              id="admin-login-email"
               placeholder="Enter Email"
               class="form-control form-control-lg"
             />
@@ -149,20 +149,26 @@
 
             <input
               type="password"
-              id="pwd"
+              id="admin-login-password"
               placeholder="Enter Password"
               class="form-control form-control-lg"
             />
 
             <input
               type="hidden"
-              id="uid"
+              id="admin-uid"
               class="form-control form-control-lg"
             />
 
             <input
               type="hidden"
-              id="admin"
+              id="admin-sid"
+              class="form-control form-control-lg"
+            />
+
+            <input
+              type="hidden"
+              id="isAdmin"
               value="false"
               class="form-control form-control-lg"
             />
@@ -175,7 +181,7 @@
       </form>
     </div>
 
-    <div id="chat-interface" class="row fixed-top ml-2">
+    <div id="chat-interface-div" class="row fixed-top ml-2">
       <ul id="chat-user-list" class="list-group mx-1 my-1 col-"></ul>
 
       <div
@@ -230,30 +236,52 @@
 
     <script>
       const socket = io();
-      const alf = $("#admin-login-form");
-      const lf = $("#login-form");
-      const clientId = $("#uid");
-      const email = $("#email");
-      const pwd = $("#pwd");
-      const admin = $("#admin");
-      const ci = $("#chat-interface");
-      const cul = $("#chat-user-list");
-      const cf = $("#chat-form");
-      const cc = $("#chat-conversations");
-      const msg = $("#message");
+      const log = (arg = "") => console.log(arg);
+      const cls = () => console.clear();
+
+      // Admin Data
+      const adminUid = $("#admin-uid");
+      const adminSid = $("#admin-sid");
+      const isAdmin = $("#isAdmin");
+
+      // Admin Login
+      const adminLoginDiv = $("#admin-login-div");
+      const adminLoginForm = $("#admin-login-form");
+      const adminLoginEmail = $("#admin-login-email");
+      const adminLoginPassword = $("#admin-login-password");
+
+      // Broadcast Modal
+      const broadcastDiv = $(".broadcast-div");
       const broadcastTitle = $(".broadcast-title");
       const broadcastBody = $(".broadcast-body");
       const staticBackdrop = $("#staticBackdrop");
+
+      // Private Messenger Modal
       const privateMessenger = $("#privateMessenger");
       const privateMessageLabel = $("#privateMessageLabel");
       const privateMessageSend = $("#privateMessageSend");
       const privateMessageForm = $("#privateMessageForm");
       const privateMessageTextarea = $("#privateMessageTextarea");
 
+      // Messenger Form
+      const chatForm = $("#chat-form");
+      const chatInterfaceDiv = $("#chat-interface-div");
+      const chatUserList = $("#chat-user-list");
+
+      // Document Ready
       $.when($.ready).then(function () {
         // Document is ready.
-        alf.addClass("show");
-        socket.emit("getmyid");
+        adminLoginDiv.addClass("show");
+
+        adminLoginForm.submit((e) => {
+          e.preventDefault();
+          socket.emit("adminlogin", {
+            email: adminLoginEmail.val(),
+            password: adminLoginPassword.val(),
+          });
+          adminLoginEmail.val("");
+          adminLoginPassword.val("");
+        });
       });
 
       function handleItemClick(e) {
@@ -271,7 +299,7 @@
         privateMessenger.modal("show");
       }
 
-      cf.submit((e) => {
+      chatForm.submit((e) => {
         e.preventDefault();
         // socket.emit("broadcast", { alert: msg.val() });
         // msg.val("");
@@ -303,28 +331,35 @@
       });
 
       socket.on("updatedclientlist", (data) => {
-        const { list } = data;
-        cul.empty();
-        const clients = JSON.parse(list);
-        clients.map((client) => {
-          if (client.email && client.uid != clientId.val()) {
-            const li = `<li onclick="handleItemClick(this)" class="list-group-item" data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
+        const { clientList } = data;
+        $("li.list-group-item").remove(".not-needed");
+        const clients = JSON.parse(clientList);
+
+        clients.forEach((client) => {
+          if (client.email && client.sid != adminSid.val()) {
+            const li = `<li onclick="handleItemClick(this)" class="list-group-item not-needed" data-sid=${client.sid} data-uid=${client.uid} data-email=${client.email}><strong>${client.fname} ${client.lname}</strong></li>`;
             // console.log(li);
-            cul.append(li);
+            chatUserList.append(li);
           }
         });
       });
 
-      socket.on("adminloginsuccess", () => {
-        alf.removeClass("show");
-        ci.addClass("show");
-        cf.addClass("show");
+      socket.on("adminloginsuccsess", (data) => {
+        const { greeting } = data;
+        log(greeting);
+        adminLoginDiv.removeClass("show");
+        chatInterfaceDiv.addClass("show");
+        chatForm.addClass("show");
+        const li = `<li onclick="signout(this)" class="list-group-item bg-info text-white mx-0 my-0">
+          <strong class="mx-0 my-0" style="font-size: 1.0rem;">${greeting}</strong></li>`;
+        chatUserList.append(li);
       });
 
-      socket.on('adminloginfail', data => {
-        const { status, cause} = data;
+      socket.on("adminloginfail", (data) => {
+        const { status, cause } = data;
         broadcastTitle.text(status);
         broadcastBody.text(cause);
+        broadcastBody.addClass("text-danger");
         staticBackdrop.modal("show");
       });
     </script>
