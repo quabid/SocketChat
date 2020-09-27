@@ -197,6 +197,28 @@
       </div>
     </div>
 
+    <div id="forgot-password-div" class="container">
+      <h2 class="h2 text-center text-primary">Password Reset</h2>
+
+      <form id="forgot-password-form" class="container" style="row-gap: 0.4rem">
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-envelope fw fa-2x"></i>
+          </span>
+
+          <input
+            type="email"
+            id="forgot-password-input"
+            placeholder="Enter Email"
+            class="form-control form-control-lg"
+            required
+          />
+        </div>
+
+        <input type="submit" value="submit" class="btn btn-primary" />
+      </form>
+    </div>
+
     <div id="user-registration-div" class="container">
       <h2 class="h2 text-center text-primary">Sign Up</h2>
       <form
@@ -356,6 +378,12 @@
       const isAdmin = $("#isAdmin");
       const signinErrDiv = $(".signin-err-div");
       const signinErrPara = $("#signin-err-para");
+      const forgotPasswordLink = $("#forgot-password-link");
+
+      // Forgot Password
+      const forgotPasswordDiv = $("#forgot-password-div");
+      const forgotPasswordForm = $("#forgot-password-form");
+      const forgotPasswordInput = $("forgot-password-input");
 
       // Registration
       const firstName = $("#firstName");
@@ -418,6 +446,12 @@
         registrationDiv.addClass("show");
       });
 
+      forgotPasswordLink.click((e) => {
+        userSigninDiv.removeClass("show");
+        registrationDiv.removeClass("show");
+        forgotPasswordDiv.addClass("show");
+      });
+
       socket.on("updatedclientlist", (data) => {
         const { clientList } = data;
         chatUserList.empty();
@@ -445,7 +479,7 @@
         const div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
            <span class="text-left mr-1">${from}</span> </i></span><p class="lead ml-2 text-lg">${message}</p></div></div>`;
 
-           chatConversationsDiv.append(div);
+        chatConversationsDiv.append(div);
       });
 
       socket.on("message", (data) => {
@@ -462,8 +496,8 @@
       });
 
       // Already Signed In
-      socket.on('alreadysignedin', data => {
-        let {message} = data;
+      socket.on("alreadysignedin", (data) => {
+        let { message } = data;
         signinErrDiv.addClass("show");
         signinErrPara.text(message);
       });
