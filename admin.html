@@ -121,78 +121,76 @@
     <div id="admin-login-div" class="container">
       <h2 class="h2 text-center text-primary">Admin Login</h2>
       <form id="admin-login-form">
-        <div
-          style="
-            justify-items: center;
-            justify-content: center;
-            row-gap: 0.5rem;
-            display: grid;
-          "
-        >
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-envelope fw fa-2x"></i>
-            </span>
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-envelope fw fa-2x"></i>
+          </span>
 
-            <input
-              type="email"
-              id="admin-login-email"
-              placeholder="Enter Email"
-              class="form-control form-control-lg"
-            />
-          </div>
+          <input
+            type="email"
+            id="admin-login-email"
+            placeholder="Enter Email"
+            class="form-control form-control-lg"
+          />
+        </div>
 
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-lock fw fa-2x"></i>
-            </span>
+        <div class="input-group mb-1">
+          <span class="input-group-text">
+            <i class="fas fa-lock fw fa-2x"></i>
+          </span>
 
-            <input
-              type="password"
-              id="admin-login-password"
-              placeholder="Enter Password"
-              class="form-control form-control-lg"
-            />
+          <input
+            type="password"
+            id="admin-login-password"
+            placeholder="Enter Password"
+            class="form-control form-control-lg"
+          />
 
-            <input
-              type="hidden"
-              id="admin-uid"
-              class="form-control form-control-lg"
-            />
+          <input
+            type="hidden"
+            id="admin-uid"
+            class="form-control form-control-lg"
+          />
 
-            <input
-              type="hidden"
-              id="admin-sid"
-              class="form-control form-control-lg"
-            />
+          <input
+            type="hidden"
+            id="admin-sid"
+            class="form-control form-control-lg"
+          />
 
-            <input
-              type="hidden"
-              id="isAdmin"
-              value="false"
-              class="form-control form-control-lg"
-            />
+          <input
+            type="hidden"
+            id="isAdmin"
+            value="false"
+            class="form-control form-control-lg"
+          />
 
-            <input
-              type="hidden"
-              id="admin-fname"
-              value="false"
-              class="form-control form-control-lg"
-            />
+          <input
+            type="hidden"
+            id="admin-fname"
+            value="false"
+            class="form-control form-control-lg"
+          />
 
-            <input
-              type="hidden"
-              id="admin-lname"
-              value="false"
-              class="form-control form-control-lg"
-            />
-          </div>
+          <input
+            type="hidden"
+            id="admin-lname"
+            value="false"
+            class="form-control form-control-lg"
+          />
+        </div>
 
-          <div class="input-group">
-            <input type="submit" value="Submit" class="btn btn-primary" />
-          </div>
+        <div class="input-group">
+          <input type="submit" value="Submit" class="btn btn-primary" />
         </div>
       </form>
+
+      <div class="input-group admin-signin-err-div my-1">
+        <p
+          id="admin-signin-err-para"
+          class="form-control-lg text-danger mx-0 my-0"
+        ></p>
+      </div>
     </div>
 
     <div id="chat-interface-div" class="row fixed-top ml-2">
@@ -265,6 +263,8 @@
       const adminLoginForm = $("#admin-login-form");
       const adminLoginEmail = $("#admin-login-email");
       const adminLoginPassword = $("#admin-login-password");
+      const adminSigninErrDiv = $(".admin-signin-err-div");
+      const adminSigninErrPara = $("#admin-signin-err-para");
 
       // Broadcast Modal
       const broadcastDiv = $(".broadcast-div");
@@ -361,11 +361,12 @@
       });
 
       socket.on("adminloginsuccsess", (data) => {
-        const { greeting, uid, sid, fname, lname } = data;
+        const { greeting, uid, sid, fname, lname, admin } = data;
         adminUid.val(uid);
         adminSid.val(sid);
         adminFname.val(fname);
         adminLname.val(lname);
+        isAdmin.val(admin);
 
         log(data);
         adminLoginDiv.removeClass("show");
@@ -374,6 +375,7 @@
         const li = `<li onclick="signout(this)" class="list-group-item bg-info text-white mx-0 my-0">
           <strong class="mx-0 my-0" style="font-size: 1.0rem;">${greeting}</strong></li>`;
         chatUserList.append(li);
+        socket.emit("updateclientlist");
       });
 
       socket.on("adminloginfail", (data) => {
@@ -382,6 +384,13 @@
         broadcastBody.text(cause);
         broadcastBody.addClass("text-danger");
         staticBackdrop.modal("show");
+      });
+
+      // Already Signed In
+      socket.on("adminalreadysignedin", (data) => {
+        let { message } = data;
+        adminSigninErrDiv.addClass("show");
+        adminSigninErrPara.text(message);
       });
     </script>
   </body>

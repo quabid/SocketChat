@@ -47,7 +47,8 @@ const ADDRESS = process.env.ADDRESS || "0.0.0.0";
 const MESSAGE = chalk.keyword("orange")(`Server started on port ${PORT}\n`);
 const serverStartMessage = () => log(`\n\t${MESSAGE}`);
 
-let clients = [];
+let clients = [],
+  admins = [];
 
 // Configure Routers
 const home = require("./routes/landing");
@@ -147,6 +148,7 @@ io.sockets.on("connection", (socket) => {
   // User Disconnected
   socket.on("disconnect", (reason) => {
     removeClient(socket.id);
+    removeAdmin(socket.id);
     updateClientList();
   });
 
@@ -206,7 +208,7 @@ io.sockets.on("connection", (socket) => {
   socket.on("adminlogin", (data) => {
     let { email, password } = data;
 
-    log(`Admin Login Data --> Email: ${email}, Password: ${password}\n`);
+    // log(`Admin Login Data --> Email: ${email}, Password: ${password}\n`);
 
     Users.findOne({ email: `${email}` })
       .then((res) => {
@@ -318,6 +320,11 @@ function addClient(client) {
   // log(clients);
 }
 
+function addAdmin(admin) {
+  admins = [...admins, { ...admin }];
+  // log(clients);
+}
+
 function createClient(user, fname, lname, pwd1, socket) {
   hashPassword(pwd1, (res) => {
     const newClient = {
@@ -342,11 +349,19 @@ function createClient(user, fname, lname, pwd1, socket) {
 
 function updateClientList() {
   let strClients = stringify(clients);
+
   clients.forEach((client) => {
     client.channel.emit("updatedclientlist", {
       clientList: strClients,
     });
   });
+
+  admins.forEach((admin) => {
+    admin.channel.emit("updatedclientlist", {
+      clientList: strClients,
+    });
+  });
+
   strClients = null;
 }
 
@@ -365,6 +380,14 @@ function findClientByEmail(email) {
   return clients.find((x) => x.email == email) || null;
 }
 
+function findAdminById(id) {
+  return admins.find((x) => x.sid == id) || null;
+}
+
+function findAdminByEmail(email) {
+  return admins.find((x) => x.email == email) || null;
+}
+
 function removeClient(id) {
   let client = findClientById(id);
   if (null !== client) {
@@ -374,19 +397,37 @@ function removeClient(id) {
   clients = clients.filter((x) => x.sid != id);
 }
 
+function removeAdmin(id) {
+  let admin = findAdminById(id);
+  if (null !== admin) {
+    admin.channel.disconnect(true);
+  }
+  admin = null;
+  admins = admins.filter((x) => x.sid != id);
+}
+
 function checkAdminCredentials(id, email, pwd, socket) {
   Clients.findOne({ user: `${id}` })
     .populate("user")
     .then((res) => {
       if (res) {
-        // log(res);
+        // log(res.user.email);
         const { firstName, lastName, password } = res;
+
         comparePassword(pwd, password)
           .then((_res) => {
             // log(res);
             switch (_res.status) {
               case "success":
-                return adminLoginSuccess(res, socket, id, firstName, lastName);
+                return adminLoginSuccess(
+                  res,
+                  socket,
+                  id,
+                  firstName,
+                  lastName,
+                  res.user.isAdmin,
+                  res.user.email
+                );
             }
           })
           .catch((err) => {
@@ -402,15 +443,44 @@ function checkAdminCredentials(id, email, pwd, socket) {
     });
 }
 
-function adminLoginSuccess(res, socket, id, firstName, lastName) {
-  let greeting = createGreeting(res);
-  return socket.emit("adminloginsuccsess", {
-    greeting: greeting,
-    sid: socket.id,
-    uid: id,
-    fname: firstName,
-    lname: lastName,
-  });
+function adminLoginSuccess(
+  res,
+  socket,
+  id,
+  firstName,
+  lastName,
+  isAdmin,
+  email
+) {
+  if (null !== findAdminByEmail(email)) {
+    return socket.emit("adminalreadysignedin", {
+      message: `Administrator ${cap(stripemail(email))} is already signed in`,
+    });
+  } else {
+    let greeting = createGreeting(res),
+      admin;
+
+    admin = {
+      sid: socket.id,
+      channel: socket,
+      uid: id,
+      fname: firstName,
+      lname: lastName,
+      isAdmin: isAdmin,
+      email: email,
+    };
+
+    addAdmin(admin);
+
+    return socket.emit("adminloginsuccsess", {
+      greeting: greeting,
+      sid: socket.id,
+      uid: id,
+      fname: firstName,
+      lname: lastName,
+      admin: isAdmin,
+    });
+  }
 }
 
 function adminLoginFailed(socket) {
