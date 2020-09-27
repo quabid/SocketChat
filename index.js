@@ -11,7 +11,6 @@ const mongoose = require("mongoose");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet("02468ouqtyminv", 13);
 const { cap } = require("./custom_modules/cfc");
-const mongoCollection = `users`;
 const {
   hashPassword,
   comparePassword,
@@ -62,7 +61,7 @@ app.use("/", home);
 app.use("/admin", admin);
 
 // Start Server
-server.listen(process.env.port || 3000, serverStartMessage);
+server.listen(process.env.port || 3000, ADDRESS, serverStartMessage);
 
 // Config Socket.io
 io.sockets.on("connection", (socket) => {

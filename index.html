@@ -464,7 +464,7 @@
 
         clients.forEach((client) => {
           if (client.email && client.sid != _sid.val()) {
-            const li = `<li onclick="handleItemClick(this)" class="list-group-item not-needed" data-sid=${client.sid} data-uid=${client.uid} data-email=${client.email}><strong>${client.email}</strong></li>`;
+            const li = `<li onclick="handleItemClick(this)" class="list-group-item not-needed" data-sid=${client.sid} data-uid=${client.uid} data-email=${client.email}><strong>${client.fname} ${client.lname}</strong></li>`;
             // console.log(li);
             chatUserList.append(li);
           }
