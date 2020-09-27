@@ -10,6 +10,7 @@ const io = require("socket.io").listen(server);
 const mongoose = require("mongoose");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet("02468ouqtyminv", 13);
+const { cap } = require("./custom_modules/cfc");
 const mongoCollection = `users`;
 const {
   hashPassword,
@@ -254,12 +255,24 @@ function signedIn(socket, doc, user) {
 
   addClient(client);
 
+  let hour = new Date().getHours(),
+    greeting;
+
+  if (hour >= 0 && hour < 12) {
+    greeting = `Good Morning ${cap(doc.firstName)}`;
+  } else if (hour >= 12 && hour < 17) {
+    greeting = `Good Afernoon ${cap(doc.firstName)}`;
+  } else {
+    greeting = `Good Evening ${cap(doc.firstName)}`;
+  }
+
   return socket.emit("signinsuccess", {
     uid: user._id,
     sid: socket.id,
     username: user.userName,
     fname: doc.firstName,
     lname: doc.lastName,
+    greeting: greeting,
   });
 }
 
