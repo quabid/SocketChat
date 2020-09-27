@@ -303,6 +303,9 @@ function updateClientList() {
 }
 
 function purgeClientList() {
+  clients.forEach((client) => {
+    client.channel.disconnect(true);
+  });
   clients = [];
 }
 
