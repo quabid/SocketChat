@@ -152,6 +152,7 @@ io.sockets.on("connection", (socket) => {
     updateClientList();
   });
 
+  // Generel Message
   socket.on("message", (data) => {
     let { from, message } = data,
       _from = findClientById(from);
@@ -171,6 +172,7 @@ io.sockets.on("connection", (socket) => {
     data = null;
   });
 
+  // Private Message
   socket.on("discreetmessage", (data) => {
     let {
       toClientUid,
