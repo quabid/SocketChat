@@ -282,7 +282,9 @@
       // Messenger Form
       const chatForm = $("#chat-form");
       const chatInterfaceDiv = $("#chat-interface-div");
+      const chatConversations = $("#chat-conversations");
       const chatUserList = $("#chat-user-list");
+      const message = $("#message");
 
       // Document Ready
       $.when($.ready).then(function () {
@@ -302,12 +304,12 @@
 
       function handleItemClick(e) {
         privateMessageLabel.text(`Send To ${e.getAttribute("data-email")}`);
+        privateMessageForm.submit((e) => e.preventDefault());
         privateMessageSend.click(() => {
-          socket.emit("messagediscreet", {
-            toUid: e.getAttribute("data-uid"),
-            toEmail: e.getAttribute("data-email"),
-            fromMessage: privateMessageTextarea.val(),
-            fromUid: clientId.val(),
+          socket.emit("discreetmessage", {
+            toClientSid: e.getAttribute("data-sid"),
+            fromClientMessage: privateMessageTextarea.val(),
+            fromClientSid: adminSid.val(),
           });
           privateMessageTextarea.val("");
           privateMessenger.modal("hide");
@@ -315,35 +317,32 @@
         privateMessenger.modal("show");
       }
 
-      chatForm.submit((e) => {
-        e.preventDefault();
-        // socket.emit("broadcast", { alert: msg.val() });
-        // msg.val("");
-        socket.emit("message", { from: clientId.val(), message: msg.val() });
-        msg.val("");
+      socket.on("message", (data) => {
+        let { from, message, admin } = data,
+          div;
+
+        if (admin) {
+          div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0 bg-warning text-dark"><i class="fas fa-user fw">
+       <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        } else {
+          div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
+       <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        }
+
+        if (data.from && data.message && div.length > 0) {
+          chatConversations.append(div);
+          data = null;
+          div = null;
+        }
       });
 
-      socket.on("hereisyourid", (data) => {
-        if (data.uid) {
-          clientId.val(data.uid);
-
-          if (typeof Storage !== undefined) {
-            if (!sessionStorage.adminLoggedIn) {
-              lf.submit((e) => {
-                e.preventDefault();
-                socket.emit("adminlogin", {
-                  email: email.val(),
-                  password: pwd.val(),
-                  uid: clientId.val(),
-                  isAdmin: admin.val(),
-                });
-
-                email.val("");
-                pwd.val("");
-              });
-            }
-          }
-        }
+      socket.on("capturemessage", (data) => {
+        let { from, message, to } = data;
+        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0 bg-dark text-light"><i class="fas fa-user-secret fw">
+       <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <p class="lead form-control form-control-sm border border-primary mx-0 my-0"> Sent ${message} To ${to}</p></div></div>`;
       });
 
       socket.on("updatedclientlist", (data) => {
@@ -376,6 +375,16 @@
           <strong class="mx-0 my-0" style="font-size: 1.0rem;">${greeting}</strong></li>`;
         chatUserList.append(li);
         socket.emit("updateclientlist");
+        chatForm.submit((e) => {
+          e.preventDefault();
+          cls();
+          log(`Message: ${message.val()} From: ${adminSid.val()}`);
+          socket.emit("message", {
+            from: adminSid.val(),
+            message: message.val(),
+          });
+          message.val("");
+        });
       });
 
       socket.on("adminloginfail", (data) => {

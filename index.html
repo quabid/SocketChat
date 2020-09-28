@@ -435,8 +435,6 @@
         privateMessageLabel.text(`Send To ${toClientEmail}`);
         privateMessageSendButton.click(() => {
           socket.emit("discreetmessage", {
-            toClientEmail: toClientEmail,
-            toClientUid: toClientUid,
             toClientSid: toClientSid,
             fromClientMessage: privateMessageTextarea.val(),
             fromClientSid: _sid.val(),
@@ -463,7 +461,7 @@
         const clients = JSON.parse(clientList);
 
         clients.forEach((client) => {
-          if (client.email && client.sid != _sid.val()) {
+          if (client.email && client.sid != _sid.val() && !client.isAdmin) {
             const li = `<li onclick="handleItemClick(this)" class="list-group-item not-needed" data-sid=${client.sid} data-uid=${client.uid} data-email=${client.email}><strong>${client.fname} ${client.lname}</strong></li>`;
             // console.log(li);
             chatUserList.append(li);
@@ -479,21 +477,36 @@
       });
 
       socket.on("privatemessage", (data) => {
-        const { from, message } = data;
+        const { from, message, isAdmin } = data;
         console.log(`From ${from} with message ${message}`);
-        const div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
+        let div;
+
+        if (isAdmin) {
+          div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0 bg-warning text-dark"><i class="fas fa-user-secret fw">
            <span class="text-sm text-left mr-1">${from}</span> </i></span>
        <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        } else {
+          div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user-secret fw">
+           <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        }
 
         chatConversationsDiv.append(div);
       });
 
       socket.on("message", (data) => {
-        let { from, message } = data;
+        let { from, message, admin } = data,
+          div;
 
-        let div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
+        if (admin) {
+          div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0 bg-warning text-dark"><i class="fas fa-user fw">
        <span class="text-sm text-left mr-1">${from}</span> </i></span>
        <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        } else {
+          div = `<div class="d-flex mx-1 my-1"><div class="input-group"><span class="input-group-text mx-0 my-0"><i class="fas fa-user fw">
+       <span class="text-sm text-left mr-1">${from}</span> </i></span>
+       <textarea class="lead form-control form-control-sm border border-primary" readonly style="background:#fff;color:#228;">${message}</textarea></div></div>`;
+        }
 
         if (data.from && data.message && div.length > 0) {
           chatConversationsDiv.append(div);

@@ -1,9 +1,11 @@
-@import 'index';
-@import 'admin';
+@import "index";
+@import "admin";
+$enable-gradients: true;
 
 * {
   box-sizing: border-box;
-  font-family: 'Times New Roman', Georgia, Times, serif, Verdana, Geneva, Tahoma, sans-serif;
+  font-family: "Times New Roman", Georgia, Times, serif, Verdana, Geneva, Tahoma,
+    sans-serif;
 }
 
 main {
